@@ -14,60 +14,50 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{Example submission for Euro S\&P 2020*\\ {\footnotesize
-    \textsuperscript{*}Note: Sub-titles are not captured in Xplore and
-    should not be used} \thanks{NB: appendices, if any, did
-    not benefit from peer review.\newline A preprint of this paper has been
-    deposited on ArXiv.}  }
+\title{Towards Certified Program Obfuscation}
 
-\author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
+\author{\IEEEauthorblockN{Weiyun Lu}
+\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+\textit{University of Ottawa}\\
+Ottawa, Canada \\
+WLU058@uottawa.ca}
 \and
-\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
+\IEEEauthorblockN{Bahman Sistany}
+\IEEEauthorblockA{\textit{Cloakware Research} \\
+\textit{Irdeto Canada}\\
+Ottawa, Canada \\
+bahman.sistany@irdeto.com}
 \and
-\IEEEauthorblockN{3\textsuperscript{rd} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
+\IEEEauthorblockN{Amy Felty}
+\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+\textit{University of Ottawa}\\
+Ottawa, Canada \\
+afelty@uottawa.ca}
 \and
-\IEEEauthorblockN{4\textsuperscript{th} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
-\and
-\IEEEauthorblockN{5\textsuperscript{th} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
-\and
-\IEEEauthorblockN{6\textsuperscript{th} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address}
+\IEEEauthorblockN{Philip Scott}
+\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+\textit{University of Ottawa}\\
+Ottawa, Canada \\
+philip.scott@uottawa.ca}
 }
 
 \maketitle
 
 \begin{abstract}
-This document is a model and instructions for \LaTeX.  This and the
-IEEEtran.cls file define the components of your paper [title, text,
-  heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters,
-Footnotes, or Math in Paper Title or Abstract.
+We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations or said another way to its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In systems where more assurance of correctness is required, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
+
+\par How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct wrt to certain specified behaviour? Will the transformed code preserve the specified behaviour as one expects? 
+
+\par To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Total equivalency between the two versions of a program certainly implies the correctness of any specified properties of interest but what if we directly try to show validity of these properties on the transformed program? 
+
+\par In this thesis, we lay the foundation to study and reason about code obfuscating transformations and show how the preservation of certain behaviours may be ``certified''. To this end, we apply techniques of formal specification and verification, by using the Coq Proof Assistant and IMP (a simple imperative language within it), to formulate what it means for a program's semantics to be preserved by an obfuscating transformation, and give formal machine-checked proofs that these properties hold. 
+
+\par We describe our work on opaque predicates, a simple control flow obfuscation, and elements of control flow flattening transformation, a more complex control flow obfuscation.  Along the way, we employ Hoare logic as our foundational specification language, as well as augment the IMP language with Switch statements.  We also define a lower-level flowchart language to wrap around IMP for modelling certain flattening transformations, treating blocks of codes as objects in their own right.
+
 \end{abstract}
 
 \begin{IEEEkeywords}
-component, formatting, style, styling, insert
+obfuscation, verification, security, correctness, Coq, proof
 \end{IEEEkeywords}
 
 \section{Introduction}
