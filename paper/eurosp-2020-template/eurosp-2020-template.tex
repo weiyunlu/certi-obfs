@@ -12,6 +12,9 @@
 \usepackage[colorlinks=true,urlcolor=black]{hyperref}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+\usepackage{minted}    
+    
 \begin{document}
 
 \title{Towards Certified Program Obfuscation}
@@ -46,7 +49,7 @@ philip.scott@uottawa.ca}
 \begin{abstract}
 We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In \emph{High Assurance} systems, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
 
-\par How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct wrt to certain specified behaviour? Will the transformed code preserve the specified behaviour as one expects? 
+\par How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour? Will the transformed code preserve the specified behaviour as one expects? 
 
 \par To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Total equivalency between the two versions of a program certainly implies the correctness of any specified properties of interest but what if we directly try to show validity of these properties on the transformed program? 
 
@@ -64,7 +67,110 @@ obfuscation, verification, security, correctness, Coq, proof
 \subsection{Background and Motivation}
 We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations or said another way to its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. In systems where more assurance of correctness is required various types of deductive reasoning is used. These are formal verification methods based on theoretical foundations rooted in logic. It is important to note that, formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness, so it is not a silver bullet however since specifications are often smaller and less complex to express, we have successfully reduced the trusted computing base (TCB) and increased our chances of achieving correctness.
 
-Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don?t hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare?s triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
+Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don?t hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
+
+How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour (expressed in some assertion language)? 
+
+To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Proving equivalency is doable in certain cases but in general is still extremely hard to do for general programs. Despite the difficulty, there are now formally verified compilers such as CompCert. However, the problem with verifying realistic systems such as a compiler is scale. CompCert verification of semantic equivalence between C and generated assembly took several man years to complete. The cost of using formal verification for mere mortals (on realistic systems) is still extremely high. 
+
+
+Total equivalency between the two versions of a program certainly implies the correctness of any program properties of interest but what if we directly try to show validity of these properties? We will limit our solution to proving properties of interest in the ``before'' version of a program are maintained in the ``after'' version of the program (after a transformation is applied). 
+
+Certain simple transformations may be easy to discharge as they don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
+
+
+\begin{listing}
+\caption{Original Code}
+\label{lst:before}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+x = 2; y = 5;
+y = x + y;
+assert(y > 2);
+\end{minted}
+\end{listing}
+
+\begin{listing}
+\caption{Obfuscated Code}
+\label{lst:after}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+x1 = 1; x2 = 1; y = 5;
+y = x1 + y; y = x2 + y;
+assert(y > 2);
+\end{minted}
+\end{listing}
+
+In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate any assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. ``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref ] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref ] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
+
+\begin{listing}
+\caption{Original Code}
+\label{lst:beforeopaque}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+int main (int argc, char *argv[])
+{
+  unsigned int x = 10;
+  unsigned int y = 20;
+  unsigned int z = 0;
+
+  z = x + y;
+  assert(z == 30);
+  return 0;
+}
+\end{minted}
+\end{listing}
+
+\begin{listing}
+\caption{Obfuscated Code}
+\label{lst:afteropaque}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+int main (int argc, char *argv[])
+{
+  unsigned int x = 10;
+  unsigned int y = 20;
+  unsigned int z = 0;
+
+  unsigned int a = ((unsigned int)argc);
+  unsigned int w = a * a;
+
+  w = a + w;
+  w = w % 2;
+  if (w == 0)
+  {
+    z = x + y;
+  }
+  else
+  {
+    z = y - x;
+  }
+  assert(z == 30);
+  return 0;
+}
+\end{minted}
+\end{listing}
+
 
 \subsection{Summary and outline of the rest of the paper}
 
