@@ -44,7 +44,7 @@ philip.scott@uottawa.ca}
 \maketitle
 
 \begin{abstract}
-We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations or said another way to its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In systems where more assurance of correctness is required, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
+We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In \emph{High Assurance} systems, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
 
 \par How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct wrt to certain specified behaviour? Will the transformed code preserve the specified behaviour as one expects? 
 
@@ -62,7 +62,20 @@ obfuscation, verification, security, correctness, Coq, proof
 
 \section{Introduction}
 \subsection{Background and Motivation}
+We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations or said another way to its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. In systems where more assurance of correctness is required various types of deductive reasoning is used. These are formal verification methods based on theoretical foundations rooted in logic. It is important to note that, formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness, so it is not a silver bullet however since specifications are often smaller and less complex to express, we have successfully reduced the trusted computing base (TCB) and increased our chances of achieving correctness.
+
+Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don?t hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare?s triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
+
 \subsection{Summary and outline of the rest of the paper}
 
+\begin{thebibliography}{00}
+\bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
+\bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
+\bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
+\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
+\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
+\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
+\bibitem{b7} George C. Necula: Proof-Carrying Code. POPL 1997: 106-119. 
+\end{thebibliography}
 
 \end{document}
