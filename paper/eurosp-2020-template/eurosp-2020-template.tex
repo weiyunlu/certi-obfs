@@ -177,11 +177,14 @@ int main (int argc, char *argv[])
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
 
+\subsection*{Towards a formally verified obfuscating compiler}
+\par \emph{Towards a formally verified obfuscating compiler} \cite{Blazy1} also uses IMP as the language for obfuscation, but studies data obfuscation techniques, as opposed to the control obfuscation techniques which opaque predicates and control flow flattening fall under \cite{CollbergTax}.
+%\par The first particular transformation studied herein is \define{obfuscating integer constants}, wherein all integer values are substituted by different ones in a \define{distorted semantics} using an obfuscating function $O: \N \to \N$.  The other discussed is \define{variable encoding}, which changes the names of variables.  A real-life application of this could be, for instance, to change a descriptive variable name like $account\_balance$ to a string of gibberish.
+%\par This is an inherently different class of techniques from the ones studied in the present work, and one can make a simple combinatorial argument that putting them together in the same obfuscation transformation would generate a synergistic effect on making a program more difficult to analyze.
+
 \begin{thebibliography}{00}
-\bibitem{b1} Sandrine Blazy and Roberto Giacobazzi. Towards a formally veried obfuscating
-compiler. In 2nd ACM SIGPLAN Software security and protection
-workshop, SPP 2012, St. Petersburg, FL, USA, 2012. HAL (
-https://hal.archives-ouvertes.fr/).
+\bibitem{Blazy1} Sandrine Blazy and Roberto Giacobazzi. Towards a formally verified obfuscating compiler. In 2nd ACM SIGPLAN Software security and protection
+workshop, SPP 2012, St. Petersburg, FL, USA, 2012. HAL (https://hal.archives-ouvertes.fr/).
 
 \bibitem{b2} 	Xavier Leroy:
 Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
@@ -190,6 +193,11 @@ Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
 \bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
 \bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
 \bibitem{b7} George C. Necula: Proof-Carrying Code. POPL 1997: 106-119. 
+
+% New items
+\bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
+A Taxonomy of Obfuscating Transformations.
+Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
 \end{thebibliography}
 
 \end{document}
