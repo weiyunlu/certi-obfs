@@ -1,5 +1,5 @@
 \documentclass[compsoc,conference,a4paper,10pt,times]{IEEEtran}
-\IEEEoverridecommandlockouts
+% \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -14,6 +14,8 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
     
 \usepackage{minted}    
+
+\usepackage[inline]{enumitem}
     
 \begin{document}
 
@@ -47,7 +49,7 @@ philip.scott@uottawa.ca}
 \maketitle
 
 \begin{abstract}
-We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In \emph{High Assurance} systems, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
+%We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but positive test results are not a proof of correctness. In \emph{High Assurance} systems, formal verification based methods are used. Behaviour of interest such as functionality, safety and security may be expressed via some sort of formal specification language.
 
 \par How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour? Will the transformed code preserve the specified behaviour as one expects? 
 
@@ -67,16 +69,15 @@ obfuscation, verification, security, correctness, Coq, proof
 \subsection{Background and Motivation}
 We expect our systems including software systems to function ``correctly''. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations or said another way to its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in correct functionality of a piece of software but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. In systems where more assurance of correctness is required various types of deductive reasoning is used. These are formal verification methods based on theoretical foundations rooted in logic. It is important to note that, formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness, so it is not a silver bullet however since specifications are often smaller and less complex to express, we have successfully reduced the trusted computing base (TCB) and increased our chances of achieving correctness.
 
-Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don?t hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
+Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don't hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
 
-How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour (expressed in some assertion language)? 
+How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour (expressed in some assertion language) while preserving the correctness of the specified behaviour? 
 
-To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Proving equivalency is doable in certain cases but in general is still extremely hard to do for general programs. Despite the difficulty, there are now formally verified compilers such as CompCert. However, the problem with verifying realistic systems such as a compiler is scale. CompCert verification of semantic equivalence between C and generated assembly took several man years to complete. The cost of using formal verification for mere mortals (on realistic systems) is still extremely high. 
+To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Proving equivalency is doable in certain cases but in general is still extremely hard to do for general programs. Despite the difficulty, there are now formally verified compilers such as CompCert. However, the problem with verifying realistic systems such as a compiler is scale. CompCert verification of semantic equivalence between C and generated assembly took several man years to complete. The cost of using formal verification for mere mortals (on realistic systems) is still high. 
 
+Total equivalency between the two versions of a program certainly implies the correctness of any program properties of interest but what if we directly try to show validity of these properties? What if we limit ourselves to only proving properties of interest in the ``before'' version of a program are maintained in the ``after'' version of the program (after a transformation is applied)? 
 
-Total equivalency between the two versions of a program certainly implies the correctness of any program properties of interest but what if we directly try to show validity of these properties? We will limit our solution to proving properties of interest in the ``before'' version of a program are maintained in the ``after'' version of the program (after a transformation is applied). 
-
-Certain simple transformations may be easy to discharge as they don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
+Certain simple transformations simply don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
 
 
 \begin{listing}
@@ -111,12 +112,19 @@ assert(y > 2);
 \end{minted}
 \end{listing}
 
-In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate any assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. ``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
+In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. ``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
 
-This example is a good preview of a key part of our research, where we may have to supply additional facts to show that our transformations indeed maintain prior program properties expressed as specifications. The assertions will capture properties or conditions that need to hold true for the transformed code as evidence the transformations have not invalidated the specifications of the original code. Think of the assertions as a kind of a key that can undo the transformations to show that the desired behaviour (as encoded in the specifications) are still valid. For some of the more sophisticated transformations we will need to help the verification to discharge (i.e. to solve) our assertions. We will accomplish this by providing ``hints'' along with the corresponding assertions. In formal annotation language settings, assertions are specified using the familiar `assert' facility while the hints are expressed using the 'assume' facility. % Bahman: need to tie Hoare logic as a starting point to eventually having a small assertion language where we supply additional facts as `assume' statements. Of course this assertion language is part of our future work and not yet implemented.
+This paper describes steps towards implementing a framework in the Coq Proof Assistant and based on IMP\cite{SFV2}, a simple imperative language. to study obfuscating transformations, their impact on programs and how specified behaviour may be preserved beyond the transformations. A of number of initial goals and principles drove the direction of this research: \begin{enumerate*}
+  \item Not reinventing the wheel: start out with IMP a familiar small imperative language implemented in Coq and use its accompanying formalized semantics in \cite{SFV2}.
+  \item Accessibility to as wide an audience as possible: an obvious option was to use CompCert and Clight as \cite{Blazy2} have done. We would have started with lots of proofs and formalisms for free (already done by the CompCert team) however the significant learning curve associated with learning CompCert infrastructure seemed prohibitive. We deemed IMP and Coq much more accessible.
+  \item Extendibility of the framework: Following the lead of \cite{SFV2} where a number of extensions to IMP are easily added and studied, we wanted the ability to build our obfuscation infrastructure incrementally. 
+  \end{enumerate*} 
+
+%This example is a good preview of a key part of our research, where we may have to supply additional facts to show that our transformations indeed maintain prior program properties expressed as specifications. The assertions will capture properties or conditions that need to hold true for the transformed code as evidence the transformations have not invalidated the specifications of the original code. Think of the assertions as a kind of a key that can undo the transformations to show that the desired behaviour (as encoded in the specifications) are still valid. For some of the more sophisticated transformations we will need to help the verification to discharge (i.e. to solve) our assertions. We will accomplish this by providing ``hints'' along with the corresponding assertions. In formal annotation language settings, assertions are specified using the familiar `assert' facility while the hints are expressed using the 'assume' facility. 
+% Bahman: need to tie Hoare logic as a starting point to eventually having a small assertion language where we supply additional facts as `assume' statements. Of course this assertion language is part of our future work and not yet implemented.
 
 
-The idea is to accompany the transformations with invariants or assertions that will help the verification process discharging the transformed programsin some assertion language starting with using Hoare logic. The invariants will capture properties or conditions that need to hold true for the transformed code as evidence the transformations have not invalidated the specifications of the code. Think of the invariants as a kind of a key that can undo the transformations to show that the desired behaviour (as encoded in the specifications) are still valid. 
+%The idea is to accompany the transformations with invariants or assertions that will help the verification process discharging the transformed programsin some assertion language starting with using Hoare logic. The invariants will capture properties or conditions that need to hold true for the transformed code as evidence the transformations have not invalidated the specifications of the code. Think of the invariants as a kind of a key that can undo the transformations to show that the desired behaviour (as encoded in the specifications) are still valid. 
 
 \begin{listing}
 \caption{Original Code}
@@ -177,7 +185,9 @@ int main (int argc, char *argv[])
 \end{listing}
 
 
-\subsection{Summary and outline of the rest of the paper}
+
+
+
 
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
@@ -203,7 +213,8 @@ Clight is the first intermediate language in the CompCert compiler, and the stra
 \begin{thebibliography}{00}
 \bibitem{Blazy1} Sandrine Blazy and Roberto Giacobazzi. Towards a formally verified obfuscating compiler. In 2nd ACM SIGPLAN Software security and protection
 workshop, SPP 2012, St. Petersburg, FL, USA, 2012. HAL (https://hal.archives-ouvertes.fr/).
-\bibitem{Blazy2} Sandrine Blazy and Alix Trieu. Formal verification of control-fow graph flattening. In Proceedings of the 5th ACM SIGPLAN Conference on CertifiedPrograms and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
+\bibitem{Blazy2} Sandrine Blazy and Alix Trieu. Formal verification of control-fow graph flattening. In Proceedings of the 5th ACM SIGPLAN Conference on Certified
+Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 
 \bibitem{Blazy3} Sandrine Blazy and Remi Hutin. Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions. In Proceedings of the 8th ACM SIGPLAN International Conference on Certified Programs and Proofs, CPP 2019, Cascais, Portugal, January 14-15, 2019, pages 196-208, 2019.
 
@@ -219,6 +230,8 @@ Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
 \bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
 A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
+\bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, Cat? alin Hri?cu, Vilhelm Sjöberg, Andrew ?
+Tolmach, and Brent Yorgey. Programming Language Foundations. Software Foundations series, volume 2. Electronic textbook, May 2018.
 \end{thebibliography}
 
 \end{document}
