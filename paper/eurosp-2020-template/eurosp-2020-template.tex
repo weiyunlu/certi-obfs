@@ -21,6 +21,7 @@
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{defin}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
 
 \begin{document}
 
@@ -348,8 +349,82 @@ THEN Z ::= X;;
 ELSE c2 FI
       \end{verbatim}
       
-%\par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
-%\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
+\par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
+\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
+
+\subsection{Hoare logic equivalence}\label{hoarequiv}
+
+In this section, we explore using Hoare logic to specify program conditions, and then generalize the result as much as we can.  The main idea with Hoare logic is that we can be more specific about what we wish a transformation to preserve (in our case, just the value of a single variable before the program runs and the value of a single variable after the program finishes, rather than the entire state as in the previous section).  First, we'll use a slightly different formulation of the factorial program.
+
+\begin{defin}[Factorial program (count-up formulation)]\index{factorial program!count-up formulation}
+This version of the factorial program counts up from zero rather than down from $X$, and works for input $0$ as well.
+\begin{verbatim}
+Definition fact_program : com :=
+  Y ::= 1;;
+  Z ::= 0;;
+  WHILE ! (Z = X) DO
+    Z ::= Z + 1;;
+    Y ::= Y * Z
+  END.
+\end{verbatim}
+\end{defin}
+
+We begin by restating Example \ref{firstoff}, replacing the specific values of $3$ and $6$ with arbitrary natural numbers, as the Hoare triple
+\[
+    (| X = x_0 |)\ fact\_program\ (| Y = x_0! |).
+\]
+
+We give definitions of the assertions on the values of $X$ and $Y$ in Coq as follows.
+
+\begin{verbatim}
+Definition as_x (x0 : nat) : Assertion 
+   := (fun st => st X = x0).
+Definition as_y (y0 : nat) : Assertion 
+   := (fun st => st Y = y0).
+\end{verbatim}
+
+\begin{example}\label{hoareexample1}
+    We are now ready to prove
+    \[
+     (|X=x_0|)\ fact\_program\ (|Y=x_0!|)
+    \]
+which in Coq is:
+    \begin{verbatim}
+Example factorial_all_hoare: 
+ forall xo,
+   {{ as_x xo }} 
+      fact_program 
+   {{ as_y (fact xo) }}.
+  \end{verbatim}
+\end{example}
+ 
+ We have proven that when $X = x_0$ before the (unobfuscated) \texttt{fact\_program} runs, then $Y = x_0!$ after the fact.  We now turn to showing that when we obfuscate $\texttt{fact\_program}$, it remains the case that $X = x_0$ beforehand implies $Y = x_0!$ when the program finishes.
+
+\par
+
+In the following, we use a new formulation of the opaque predicate transformation, as it now makes our life easier to collapse the assignments into single lines.
+
+\begin{verbatim}
+Definition opaque_trans' x c1 c2 :=
+  X' ::= (ANum x) ;;
+  Z' ::= X' * X' + X' + X' + 1 ;;
+  Z'' ::= (X' + 1) * (X' + 1) ;;
+  IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
+\end{verbatim}
+
+\begin{example}\label{hoarel2}
+    We now prove the same Hoare triple holds with the obfuscated factorial program in place of the original program.
+    \[
+     \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com, (|X=x_0|)\ opaque\_trans'\ (X, fact\_program, c_2)\ (|Y=x_0!|)
+    \]
+    which in Coq is:
+    \begin{verbatim}
+Example factorial_all_hoare_opaque: forall x xo c2,
+  {{ as_x xo }} (opaque_trans' x fact_program c2) {{ as_y (fact xo) }}.\end{verbatim} 
+\end{example}
+
+
+
 
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
