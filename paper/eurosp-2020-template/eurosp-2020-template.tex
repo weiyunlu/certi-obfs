@@ -16,7 +16,8 @@
 \usepackage{minted}    
 
 \usepackage[inline]{enumitem}
-    
+% New commands
+
 \begin{document}
 
 \title{Towards Certified Program Obfuscation}
@@ -195,6 +196,20 @@ int main (int argc, char *argv[])
 \end{listing}
 
 
+\section{Opaque predicates in IMP/Coq}
+
+We now enter the main topic of the thesis proper, formalizing and certifying the opaque predicate transformation mentioned earlier. 
+
+\subsection{Opaque predicate obfuscation}\label{subsec: opaquedefn}
+	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas in this thesis.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the programmer writing the code. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance.
+
+Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. 
+
+
+An  \emph{opaque predicate} transformation takes as inputs a program to be obfuscated, $c_1$, an opaque predicate $P$, and a dummy program\footnote{It's not known to an attacker, a priori, that it's a dummy program.  In practice, $c_2$ should be constructed so that it is not obvious; e.g.\ $c_2$ should not be simply an empty program, but should be complicated enough that it looks like it could feasibly be intended to be executed.} $c_2$, and returns the program
+\begin{verbatim}
+    IFB (P x) THEN c1 ELSE c2 FI.
+\end{verbatim}
 
 
 
@@ -242,6 +257,8 @@ A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
 \bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, Cat? alin Hri?cu, Vilhelm Sjöberg, Andrew ?
 Tolmach, and Brent Yorgey. Programming Language Foundations. Software Foundations series, volume 2. Electronic textbook, May 2018.
+\bibitem{CoNa} 	Christian S. Collberg, Jasvir Nagra:
+Surreptitious Software - Obfuscation, Watermarking, and Tamperproofing for Software Protection. Addison-Wesley Software Security Series, Addison-Wesley 2010, ISBN 978-0-321-54925-9, pp. I-XXVII, 1-748
 \end{thebibliography}
 
 \end{document}
