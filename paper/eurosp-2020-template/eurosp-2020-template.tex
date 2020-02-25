@@ -316,7 +316,7 @@ holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, s
 	(x * x + x + x + 1) = (x + 1) * (x + 1).  \] 
 \end{lemma}
 
-\subsection{Example}\label{firstfact}
+\begin{example}\label{firstfact}
     For any $x\in \mathbb{N}$ and any program $c_2$, $opaque\_trans$ x $fact\_nonzero$ $c2$ with input $X=3$ yields output $Y=6$.  In Coq, however, it looks as follows.
     \begin{verbatim} Example factorial\_3\_opaque\_trans:
   forall x c2, 
@@ -348,6 +348,7 @@ THEN Z ::= X;;
   END
 ELSE c2 FI
       \end{verbatim}
+\end{example}
       
 \par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
 \par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
@@ -417,14 +418,96 @@ Definition opaque_trans' x c1 c2 :=
     \[
      \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com, (|X=x_0|)\ opaque\_trans'\ (X, fact\_program, c_2)\ (|Y=x_0!|)
     \]
-    which in Coq is:
+    which in Coq is
     \begin{verbatim}
-Example factorial_all_hoare_opaque: forall x xo c2,
-  {{ as_x xo }} (opaque_trans' x fact_program c2) {{ as_y (fact xo) }}.\end{verbatim} 
+Example factorial_all_hoare_opaque: 
+forall x xo c2,
+  {{ as_x xo }} 
+     (opaque_trans' x fact_program c2) 
+  {{ as_y (fact xo) }}.\end{verbatim}
 \end{example}
 
+We've now successfully shown that our factorial program, both with and without the opaque predicate transformation, satisfies a Hoare triple of the form
+\[ (| X = x_0 |)\ c\ (| Y = y_0 |), \]
+and we would like to generalize\footnote{Our result is still rather specific; the only pre-condition we treat is that a specific variable $X$ takes on some value, and the only post-condition we treat is that a specific variable $Y$ takes on some value.  The pre- and post- conditions in Hoare logic could be more general, such as assertions that a variable isn't equal to some value, is greater than some value, or a conjunction or disjunction of several other statements.}.  Let's introduce a new term: \emph{Hoare fidelity}.
 
+\begin{defin}[Hoare fidelity (with respect to input X and output Y)]
+A program $c_2$ preserves the Hoare fidelity of a program $c_1$ with respect to input X and output Y, if the validity of the Hoare triple
+\[
+(| X = x_0 |)\ c_1\ (| Y = y_0 |)
+\]
+implies the validity of the Hoare triple
+\[
+(| X = x_0 |)\ c_2\ (| Y = y_0 |).
+\]
+In Coq,
+\begin{verbatim}
+Definition Hoare_fidelity_xy c1 c2 
+ := forall xo yo,
+ hoare_triple (as_x xo) c1 (as_y yo) -> 
+ hoare_triple (as_x xo) c2 (as_y yo).\end{verbatim}
+\end{defin}
 
+Indeed, the decision to use the factorial program in the previous examples for illustrative purposes was an unnecessary detail, so we replace it with an arbitrary program.
+
+\begin{theorem}\label{hoare_xy_main}
+For all programs $c_1$ and $c_2$, and all $x \in \mathbb{N}$, the transformed program $opaque\_trans'(x, c_1, c_2)$ preserves the Hoare fidelity with respect to input X and output Y of $c_1$.  
+In Coq, \begin{verbatim}
+Theorem Opaque_trans_hoare_fidelity_xy: 
+ forall x c1 c2,
+  Hoare_fidelity_xy c1 
+    (opaque_trans' x c1 c2).
+\end{verbatim}
+\end{theorem}
+
+\subsection{A formulation without assignment}\label{noass}
+In the first presentation of the opaque predicate transformation from Section \ref{naive}, we used a program that allowed
+the user (that is, the person obfuscating the code) to specify a particular number, and then add a number of assignments before the
+opaque predicate check, and then ultimately noted at the end of Section \ref{naive} that command equivalence (which depends on the full state --- that is, the equality of values of \emph{all} variables) did not
+hold in this model due to these extra assignments and variables.
+\par
+We now present an alternate formulation with no assignments, with the entire predicate
+built into the boolean condition of the branching statement. On the one hand, the entire
+equation appears on a single line instead of a number of assignments, which may make it
+easier to detect, but on the other hand, it can access any variable already being used (and
+in the case of IMP, also any variable not already being used; recall a state in IMP is a total map
+from strings to $\mathbb{N}$ and all variables have default value 0).  In this case, state equivalence can be proven in general.
+
+The power of proving a theorem to this level of generality is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the predicate supplied is indeed an opaque predicate.
+
+\begin{example}\label{factopaqueex}
+We can now apply this theorem to our same running example of predicate and factorial program as before.
+\begin{verbatim}
+Example example_fact_opaque_pred: 
+ cequiv fact_nonzero 
+ (make_opaque_pred_IFB 
+   (make_opaque_pred 
+     ((X + 1) * (X + 1)) 
+      (X * X + X + X + 1)) 
+     fact_nonzero SKIP).
+\end{verbatim}
+\end{example}
+
+\subsection{Hoare logic - weakened information simulation}\label{weakened}
+
+We close this chapter with a series of examples that formally demonstrates the obfuscating effect of using an opaque predicate from the point of view of a simulated attacker.  We use Hoare Logic with the factorial program again, with input $X=3$, output $Y=6$, and with the $square\_program$ as the dummy program.
+
+\begin{example}\label{hoare21}
+    With the original factorial program, it is a straightforward application of the more general theorem already proven that the Hoare triple \[(|X=3|)\ fact\_program\ (|Y=6|)\] is valid.
+\end{example}
+
+\begin{example}\label{hoare22}
+With the transformed program, the analogous Hoare triple
+\[(|X=3|)\ trans\_fact\_square\_program\ (|Y=6|)\]
+is valid.
+\end{example}
+
+\begin{example}\label{hoare23}
+Now to simulate an attacker\footnote{This thesis is primarily focused on correctness rather than security models.  We're just assuming that we have an attacker performing static analysis on the code, and that he or she doesn't know the opaque predicate is always true or always false.  Under that assumption, we show that they obtain weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
+\[
+(|X=3|)\ trans\_fact\_program\ (|Y=6 \lor Y=9|).
+\]
+\end{example}
 
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
