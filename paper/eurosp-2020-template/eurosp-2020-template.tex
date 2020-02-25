@@ -16,6 +16,7 @@
 \usepackage{minted}    
 
 \usepackage[inline]{enumitem}
+\usepackage[all,cmtip]{xy}
 % New commands
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
@@ -279,7 +280,7 @@ Definition fact_nonzero : com :=
 
     The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, however, as it is neither too complex nor completely trivial.
 
-\subsection{Example}\label{firstoff}
+\begin{example}\label{firstoff}
     The $fact\_nonzero$ program with input $X=3$ yields output $Y=6$.  However, the story is not quite so simple (it is true that input $X=3$ yields $Y=6$, but as one can see in the Coq example, the state keeps track of the value of every variable involved in the program.).  The specification of this statement in Coq is
 \begin{verbatim}
 Example factorial_3: 
@@ -287,6 +288,7 @@ fact_nonzero / { X --> 3 }
   { X --> 3; Z --> 3; Y --> 1; Y --> 3; 
   Z --> 2; Y --> 6; Z --> 1 }.
 \end{verbatim}
+\end{example}
     Note that formally, the final state holds the information of every intermediate assignment made by the program.  We can discern the output $Y=6$ by the fact that this is the rightmost case of a value being assigned to $Y$.  But wait, there's more!  We said earlier that in Coq, an example is no different from a proposition or a theorem in anything but name, so we must actually give a proof\footnote{This really is an example, to us.  But just because one declares ``here is an example of $X$" does not mean that $X$ is necessarily true.  In Coq, a proof must still be constructed.\par For example, in natural language, one can say ``An example of a prime number is 20051".  But this isn't immediately obvious, and one still needs to prove that example, for instance, by writing a program that tries to divide it by every number up to its square root.}.  Moreover, since command evaluation is relational and not functional (recall the reason for this is the possibility of non-terminating While loops), we must build the proof out step by step (see \cite{WeiRepo} for proofs).
 
 For this section, we'll use as a simple opaque predicate namely,
@@ -509,6 +511,77 @@ Now to simulate an attacker\footnote{This thesis is primarily focused on correct
 \]
 \end{example}
 
+\section{Control flow flattening in IMP/Coq}\label{Ch4}
+Reverse engineering tools such as the one we saw in the Introduction can at a glance reveal some information about the \emph{control flow} of the program, or the rough structure as delineated by the flow of blocks of code through If-Then-Else, While-Do-End, Switch, and Jump constructs.
+
+\par The obfuscation technique to make this difficult to analyze, then, is \emph{control flow flattening}, which aims to break apart all of these constructs that would reveal information about a program's control flow, and flatten an entire program into a single semantically equivalent switch statement inside a while loop.
+
+\par For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}.  
+
+\subsection{Flattening an If-Then-Else construct}
+For the first half of this chapter, we will focus in on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (adapted from \cite{Blazy2}):
+
+\begin{listing}
+\caption{If-Then-Else}
+\label{lst:beforeflatten}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+int i;
+i = 0;
+if (i < 100) 
+{
+  i++;
+}
+\end{minted}
+\end{listing}
+
+\begin{listing}
+\caption{Flattened If-Then-Else}
+\label{lst:afterflatten}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+int i;
+int s;
+s = 1;
+while (s != 0) {
+  switch (s) {
+    case 1:
+      i = 0;
+      s = 2;
+      break;
+    case 2:
+      if (i < 100) {
+        s = 3;
+      break;
+      } else {
+        s = 0;
+        break;
+      }
+    case 3:
+      i++;
+      s = 0;
+      break;
+  }
+}
+\end{minted}
+\end{listing}
+
+
+We will, in Section \ref{4.2}, first add the syntax and semantics of Switch statements to the IMP language.  Then in Section \ref{4.3} we formalize the above transformation, define what it means for it to be correct, realize some additional conditions are required and formulate what those are, and then finally prove it so.
+
+
+\subsection{Augmenting IMP with Switch (IMP+Switch)}\label{4.2}
+
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
 
@@ -557,6 +630,7 @@ Surreptitious Software - Obfuscation, Watermarking, and Tamperproofing for Softw
 \bibitem{Prada} Mila Dalla Preda, Matias Madou, Koen De Bosschere, Roberto Giacobazzi:
 Opaque Predicates Detection by Abstract Interpretation. AMAST 2006: 81-95
 \bibitem{Coq} "The {Coq Proof Assistant}", \url{https://coq.inria.fr}, 2019
+\bibitem{Wang} Chenxi Wang and Jonathan Hill and John Knight and Jack Davidson, ``Software Tamper Resistance: Obstructing Static Analysis of Programs,'' 2000
 \end{thebibliography}
 
 \end{document}
