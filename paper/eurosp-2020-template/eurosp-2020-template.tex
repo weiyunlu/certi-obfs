@@ -20,6 +20,7 @@
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{defin}[theorem]{Definition}
 
 \begin{document}
 
@@ -202,7 +203,45 @@ int main (int argc, char *argv[])
 In this chapter we provide necessary background information used for formal verification --- namely, the Coq proof assistant, the simple imperative language IMP defined inside Coq, and Hoare logic for reasoning about pre- and post-conditions of programs.
 \subsection{The Coq proof assistant}
 
+Coq \cite{Coq} is a formal proof management system, an implementation of the \emph{Calculus of (co)inductive constructions}, which provides a formal language in which one can write mathematical definitions, algorithms and theorems, and an environment for the development of machine-checked proofs.  It is implemented (mostly) in OCaml\footnote{See \href{https://www.ocaml.org}{https://www.ocaml.org}.} and (a little bit of) C.
 
+\subsection{CompCert certified C compiler}
+Something formally defined and proven in Coq leads to a high assurance of correctness --- one example of this is \emph{CompCert} \cite{CompCert} by Xavier Leroy's team, a formally verified compiler written in Coq for (a large subset) of C.  The upshot of CompCert being formally verified is that it will not cause \emph{miscompilation errors} --- that is, the executable code produced is proven to behave exactly as the semantics specified by the source program.
+
+\section{Software Foundations --- the IMP language}
+We now give the necessary definitions and theorems from Software Foundations \cite{SFV2}, an interactive textbook on the mathematical foundations of reliable software, which is actually entirely a Coq script.
+
+\par We use the \emph{IMP} language defined within the Software Foundations Coq files for our code obfuscation formalisms.  IMP, which simply stands for imperative, is a bare-bones simple imperative language, like C stripped of all nonessential features.  This simplicity allows us to focus on the nuts and bolts of formally specifying and proving correct individual obfuscating transformations, emphasizing modularity.
+
+\par Since IMP is written inside Coq, we can formally reason about not just individual programs, but entire classes of programs, and even the language itself.  We give the definitions, lemmas, and theorems necessary for our work, but will omit many details and proofs.  
+
+\par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
+
+\subsection{Command equivalence}\label{commequiv} 
+    For two commands (IMP programs) $c_1$ and $c_2$ to be equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq,
+\begin{verbatim}
+Definition cequiv (c1 c2 : com) : Prop 
+  := forall (st st' : state), 
+(c1 / st \\ st') <-> (c2 / st \\ st').
+\end{verbatim}
+
+
+\subsection{Hoare logic}
+\emph{Hoare logic} is a way for us to prove that executing a program will result in satisfying certain post-conditions, (possibly) conditional on certain pre-conditions being met.  This involves defining a natural way of writing program specifications, along with a compositional proof technique to prove correctness with respect to them.
+\begin{defin}[Hoare triple]
+	A \emph{Hoare triple}, which we sometimes refer to simply as a triple, consists of a pre-condition $P$, a program $c$, and a post-condition $Q$, written
+    \[
+    	(| P |)\ c\ (| Q |),
+    \]
+    which specifies that whenever $P$ is true before execution, running the program $c$ is guaranteed to make $Q$ true after execution.  This informal definition leaves states implicit, but for the formulation in Coq we will need to take states into account.
+\end{defin}
+
+\begin{defin}[Assertion]
+An \emph{assertion} about a program's state, formally, is a function from states to propositions.
+\begin{verbatim}   Definition Assertion := state -> Prop.\end{verbatim}
+\par Informally, for some assertion $P$ and some state $st$, the proposition $P(st)$ represents the statement that $P$ holds in state $st$.  
+As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $P(st)$ is the proposition ``$x = 0$ in the state $st$".
+\end{defin}
 
 \section{Opaque predicates in IMP/Coq}
 
@@ -341,8 +380,7 @@ Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 
 \bibitem{Blazy3} Sandrine Blazy and Remi Hutin. Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions. In Proceedings of the 8th ACM SIGPLAN International Conference on Certified Programs and Proofs, CPP 2019, Cascais, Portugal, January 14-15, 2019, pages 196-208, 2019.
 
-\bibitem{b2} 	Xavier Leroy, 
-Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
+\bibitem{CompCert} 	Xavier Leroy, ``Formal verification of a realistic compiler,'' Commun. ACM 52(7): 107-115 (2009)
 \bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
 \bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
 \bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
@@ -354,12 +392,13 @@ Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
 \bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
 A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
-\bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, Cat? alin Hri?cu, Vilhelm Sjöberg, Andrew ?
+\bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, Cat?alin Hri?cu, Vilhelm Sjöberg, Andrew ?
 Tolmach, and Brent Yorgey. Programming Language Foundations. Software Foundations series, volume 2. Electronic textbook, May 2018.
 \bibitem{CoNa} 	Christian S. Collberg, Jasvir Nagra:
 Surreptitious Software - Obfuscation, Watermarking, and Tamperproofing for Software Protection. Addison-Wesley Software Security Series, Addison-Wesley 2010, ISBN 978-0-321-54925-9, pp. I-XXVII, 1-748
 \bibitem{Prada} Mila Dalla Preda, Matias Madou, Koen De Bosschere, Roberto Giacobazzi:
 Opaque Predicates Detection by Abstract Interpretation. AMAST 2006: 81-95
+\bibitem{Coq} "The {Coq Proof Assistant}", \url{https://coq.inria.fr}, 2019
 \end{thebibliography}
 
 \end{document}
