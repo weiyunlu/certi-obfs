@@ -17,6 +17,9 @@
 
 \usepackage[inline]{enumitem}
 % New commands
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
 
 \begin{document}
 
@@ -195,15 +198,20 @@ int main (int argc, char *argv[])
 \end{minted}
 \end{listing}
 
+\section{Background --- formal verification}\label{two}
+In this chapter we provide necessary background information used for formal verification --- namely, the Coq proof assistant, the simple imperative language IMP defined inside Coq, and Hoare logic for reasoning about pre- and post-conditions of programs.
+\subsection{The Coq proof assistant}
+
+
 
 \section{Opaque predicates in IMP/Coq}
 
 We now enter the main topic of the thesis proper, formalizing and certifying the opaque predicate transformation mentioned earlier. 
 
 \subsection{Opaque predicate obfuscation}\label{subsec: opaquedefn}
-	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas in this thesis.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the programmer writing the code. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance.
+	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas in this thesis.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the transformation but hard to deduce by an attacker \cite{Prada}. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance.
 
-Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be detected see \cite{Prada}.
+Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
 
 
 An  \emph{opaque predicate} transformation takes as inputs a program to be obfuscated, $c_1$, an opaque predicate $P$, and a dummy program\footnote{It's not known to an attacker, a priori, that it's a dummy program.  In practice, $c_2$ should be constructed so that it is not obvious; e.g.\ $c_2$ should not be simply an empty program, but should be complicated enough that it looks like it could feasibly be intended to be executed.} $c_2$, and returns the program
@@ -211,8 +219,98 @@ An  \emph{opaque predicate} transformation takes as inputs a program to be obfus
     IFB (P x) THEN c1 ELSE c2 FI.
 \end{verbatim}
 
+\par In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
+\par However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
+\par Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
+\par All code for this chapter is in the file \verb$OBFS_opaque_predicate.v$ \cite{repo}.
 
+\section{Command equivalence}\label{naive}
+\subsection{Factorial program (countdown nonzero formulation)}\label{Fact}
+    The following IMP program computes the factorial of a nonzero natural number.  The input is read from $X$, temporary values are stored as $Z$, and the factorial of the input is stored in $Y$ as the output.
+\begin{verbatim}
+Definition fact_nonzero : com :=
+  Z ::= X;;
+  Y ::= 1;;
+  WHILE ! (Z <= 1) DO
+    Y ::= Y * Z;;
+    Z ::= Z - 1
+  END.
+\end{verbatim}
 
+    The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, however, as it is neither too complex nor completely trivial.
+
+\subsection{Example}\label{firstoff}
+    The $fact\_nonzero$ program with input $X=3$ yields output $Y=6$.  However, the story is not quite so simple (it is true that input $X=3$ yields $Y=6$, but as one can see in the Coq example, the state keeps track of the value of every variable involved in the program.).  The specification of this statement in Coq is
+\begin{verbatim}
+Example factorial_3: 
+fact_nonzero / { X --> 3 } 
+  { X --> 3; Z --> 3; Y --> 1; Y --> 3; 
+  Z --> 2; Y --> 6; Z --> 1 }.
+\end{verbatim}
+    Note that formally, the final state holds the information of every intermediate assignment made by the program.  We can discern the output $Y=6$ by the fact that this is the rightmost case of a value being assigned to $Y$.  But wait, there's more!  We said earlier that in Coq, an example is no different from a proposition or a theorem in anything but name, so we must actually give a proof\footnote{This really is an example, to us.  But just because one declares ``here is an example of $X$" does not mean that $X$ is necessarily true.  In Coq, a proof must still be constructed.\par For example, in natural language, one can say ``An example of a prime number is 20051".  But this isn't immediately obvious, and one still needs to prove that example, for instance, by writing a program that tries to divide it by every number up to its square root.}.  Moreover, since command evaluation is relational and not functional (recall the reason for this is the possibility of non-terminating While loops), we must build the proof out step by step (see \cite{WeiRepo} for proofs).
+
+For this section, we'll use as a simple opaque predicate namely,
+    \[
+    	\forall x.\ (x * x + x + x + 1) = (x + 1) * (x + 1).
+    \]
+We now define an opaque predicate transformation with our running example.  
+    For the purposes of making the proofs easier to work with, and also to add a slight additional touch of obfuscation, we split up these assignments over multiple lines, as follows.
+\begin{verbatim}
+Definition opaque_trans x c1 c2 :=
+  X' ::= (ANum x) ;;
+  Z' ::= X' * X' ;;
+  Z' ::= Z' + X' ;;
+  Z' ::= Z' + X' ;;
+  Z' ::= Z' + 1 ;;
+  Z'' ::= X' + 1 ;;
+  Z'' ::= Z'' * Z'' ;;
+  IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
+\end{verbatim}
+holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by \verb$opaque_trans$ is equivalent to the original.
+
+\par The observant logically inclined reader should, at this point, now be suspicious about taking this claim at face value.  What do we mean when we say the transformed program should be ``the same''?  The next example, which shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example, elucidates the necessity to be precise.  First, however, we will need a few lemmas that show our opaque predicate is indeed such, in various incarnations to be used in proofs.
+
+\begin{lemma}\label{opaqueness}
+    It is indeed the case that 
+    \[ \forall x \in \mathbb{N}, 
+	(x * x + x + x + 1) = (x + 1) * (x + 1).  \] 
+\end{lemma}
+
+\subsection{Example}\label{firstfact}
+    For any $x\in \mathbb{N}$ and any program $c_2$, $opaque\_trans$ x $fact\_nonzero$ $c2$ with input $X=3$ yields output $Y=6$.  In Coq, however, it looks as follows.
+    \begin{verbatim} Example factorial\_3\_opaque\_trans:
+  forall x c2, 
+  opaque_trans x fact_nonzero 
+  c2 / { X --> 3 } 
+    { X --> 3; X' --> x; Z' --> x * x; 
+      Z' --> x * x + x; 
+      Z' --> x * x + x + x;
+      Z' --> x * x + x + x + 1; 
+      Z'' --> x + 1; 
+      Z'' --> (x + 1) * (x + 1); 
+      Z --> 3; Y --> 1; Y --> 3; 
+      Z --> 2; Y --> 6; Z --> 1 }.
+    \end{verbatim}
+      After instantiating variables and unfolding the definitions, the transformed program looks like:
+      \begin{verbatim}
+X' ::= x;;
+Z' ::= X' * X';;
+Z' ::= Z' + X';;
+Z' ::= Z' + X';;
+Z' ::= Z' + 1;;
+Z'' ::= X' + 1;;
+Z'' ::= Z'' * Z'';;
+IFB Z' = Z''
+THEN Z ::= X;;
+  Y ::= 1;;
+  WHILE ! (Z <= 1) DO Y ::= Y * Z;; 
+      Z ::= Z - 1 
+  END
+ELSE c2 FI
+      \end{verbatim}
+      
+%\par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
+%\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
 
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
@@ -243,7 +341,7 @@ Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 
 \bibitem{Blazy3} Sandrine Blazy and Remi Hutin. Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions. In Proceedings of the 8th ACM SIGPLAN International Conference on Certified Programs and Proofs, CPP 2019, Cascais, Portugal, January 14-15, 2019, pages 196-208, 2019.
 
-\bibitem{b2} 	Xavier Leroy:
+\bibitem{b2} 	Xavier Leroy, 
 Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
 \bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
 \bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
@@ -252,6 +350,7 @@ Formal verification of a realistic compiler. Commun. ACM 52(7): 107-115 (2009)
 \bibitem{b7} George C. Necula: Proof-Carrying Code. POPL 1997: 106-119. 
 
 % New items
+\bibitem{WeiRepo} Weiyun Lu, ``GitHub repository to accompany the present thesis,'' \url{https://github.com/weiyunlu/coq-certified-obfuscation}, 2019 
 \bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
 A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
