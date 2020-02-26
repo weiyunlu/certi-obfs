@@ -79,6 +79,7 @@ Formal verification based methods, used to show a (software) system behaves as i
 
 How can one perform code transformations such as obfuscating transformations or optimizing transformations on code that is assumed to be correct with respect to certain specified behaviour (expressed in some assertion language) while preserving the correctness of the specified behaviour? 
 
+
 To achieve the highest levels of assurance that the transformations have maintained correctness of the code, is to prove the two versions of the program (before and after the transformation) is equivalent. Proving equivalency is doable in certain cases but in general is still extremely hard to do for general programs. Despite the difficulty, there are now formally verified compilers such as CompCert. However, the problem with verifying realistic systems such as a compiler is scale. CompCert verification of semantic equivalence between C and generated assembly took several man years to complete. The cost of using formal verification for mere mortals (on realistic systems) is still high. 
 
 Total equivalency between the two versions of a program certainly implies the correctness of any program properties of interest but what if we directly try to show validity of these properties? What if we limit ourselves to only proving properties of interest in the ``before'' version of a program are maintained in the ``after'' version of the program (after a transformation is applied)? 
@@ -118,12 +119,18 @@ assert(y > 2);
 \end{minted}
 \end{listing}
 
-In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. ``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
+In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the main goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. More formally, according to Barak et al. as cited in \cite{BanescuCGNP16} obfuscators are programs that transform input programs (e.g. similar to a compiler) into output programs where the output programs satisfy three properties. The output programs:
+\begin{enumerate}
+   \item Must be semantically equivalent to the input program (functionality property),
+   \item Must be at most polynomially bigger or slower than the input program (slowdown property), and
+   \item Must be as ``hard to analyze and de-obfuscate'' as a blackbox version of the program (virtual black-box property).
+\end{enumerate}
+``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
 
-This paper describes steps towards implementing a framework in the Coq Proof Assistant and based on IMP\cite{SFV2}, a simple imperative language. to study obfuscating transformations, their impact on programs and how specified behaviour may be preserved beyond the transformations. A of number of initial goals and principles drove the direction of this research: 
+This paper describes steps towards implementing a framework in the Coq Proof Assistant and based on IMP\cite{SFV2}, a simple imperative language to study obfuscating transformations, their impact on programs and how specified behaviour may be preserved beyond the transformations. A number of initial goals and principles drove the direction of this research: 
 \begin{enumerate*}
   \item Not reinventing the wheel: start out with IMP a familiar small imperative language implemented in Coq and use its accompanying formalized semantics in \cite{SFV2}.
-  \item Accessibility to as wide an audience as possible: an obvious option was to use CompCert and Clight as \cite{Blazy2} have done. We would have started with lots of proofs and formalisms for free (already done by the CompCert team) however the significant learning curve associated with learning CompCert infrastructure seemed prohibitive. We deemed IMP and Coq much more accessible.\label{goal2}
+  \item Accessibility to as wide an audience as possible: an obvious option was to use CompCert and Clight as \cite{Blazy2} has done. We would have started with lots of proofs and formalisms for free (already done by the CompCert team) however the significant learning curve associated with learning CompCert infrastructure seemed prohibitive. We deemed IMP and the Coq infrastructure much more accessible.\label{goal2}
   \item Extendibility of the framework: Following the lead of \cite{SFV2} where a number of extensions to IMP are easily added and studied, we wanted the ability to build our obfuscation infrastructure incrementally on top of IMP.\label{goal3}
   \end{enumerate*} 
   
@@ -131,7 +138,7 @@ Keeping these research goals in mind the contributions of this paper are the fol
 
 \begin{itemize}
     \item We consider different formulations of what it means for a transformation to be semantics-preserving, including complete state equivalence as well as Hoare logic equivalence. In this particular setting, the latter is a novel approach, and we give examples of its use with opaque predicate transformations. In addition, use of Hoare logic in this context leads to establishing our main approach to ``certifying obfuscating transformations'': our obfuscated programs will be ``decorated''  \`a la  Pierce's \cite{SFV2} with additional assertions whose proofs will also be provided.\label{itm:1}
-    \item We give clear and detailed explanations of the proofs and tactics in Coq, which, to the best of our knowledge, the existing literature does not, thus providing an accessible explanation of not just obfuscation techniques, but also in tandem with its formalization and verification inside Coq. This follows from research goal \ref{goal2}.\label{itm:2}
+    \item We give motivations and top-level explanations for the proofs (and refer to \cite{Weyun} for a more detailed treatment of the proofs and tactics) in Coq, which, to the best of our knowledge, the existing literature does not, thus providing an accessible explanation of not just obfuscation techniques, but also in tandem with its formalization and verification inside Coq. This follows from research goal \ref{goal2}.\label{itm:2}
     \item We begin with a minimal imperative programming language inside Coq for reasoning about programs and their transformations, and then augment it as needed for control flow flattening algorithms, first by augmenting its syntax and semantics with switch statements, and then by defining a lower-level flowchart language that wraps around blocks of code in order to model real-world intermediate languages used in obfuscation tools. This follows our research goals \ref{goal2} and \ref{goal3}. \label{itm:3}
 \end{itemize}
 
@@ -822,6 +829,10 @@ Opaque Predicates Detection by Abstract Interpretation. AMAST 2006: 81-95
 \bibitem{Coq} "The {Coq Proof Assistant}", \url{https://coq.inria.fr}, 2019
 \bibitem{Wang} Chenxi Wang and Jonathan Hill and John Knight and Jack Davidson, ``Software Tamper Resistance: Obstructing Static Analysis of Programs,'' 2000
 \bibitem{Weyun} Weiyun Lu, ``Formally Verified Code Obfuscation in the Coq Proof Assistant,'' Collection: Theses, 2011 -, UOttawa, 2019 
+\bibitem{BanescuCGNP16} 	Sebastian Banescu, Christian S. Collberg, Vijay Ganesh, Zack Newsham, Alexander Pretschner:
+``Code obfuscation against symbolic execution attacks,'' ACSAC 2016: 189-200
+\bibitem{Barak} Boaz Barak, Oded Goldreich, Russell Impagliazzo, Steven Rudich, Amit Sahai, Salil P. Vadhan, Ke Yang:
+``On the (Im)possibility of Obfuscating Programs,'' CRYPTO 2001: 1-18
 \end{thebibliography}
 
 \end{document}
