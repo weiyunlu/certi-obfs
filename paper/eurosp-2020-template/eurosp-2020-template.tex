@@ -261,7 +261,7 @@ As an example, let $st$ be the state where the value of every variable is 0.  Le
 Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical (see \cite{SFV2}).
 
 \section{Opaque predicates in IMP/Coq}
-	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas in this thesis.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the transformation but hard to deduce by an attacker \cite{Prada}. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance.
+	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas here.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the transformation but hard to deduce by an attacker \cite{Prada}. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance penalty.
 
 Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
 
@@ -319,7 +319,11 @@ Definition opaque_trans x c1 c2 :=
   Z'' ::= Z'' * Z'' ;;
   IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
 \end{verbatim}
-holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by $opaque_trans$ is equivalent to the original.
+That is, the $opaque_trans$ function takes as input a number $x$ and programs $c_1$ and $c_2$, and returns the new program that executes $c_1$ if the equation
+\[
+	(x * x + x + x + 1) = (x + 1) * (x + 1)
+\]
+holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by $opaque\_trans$ is equivalent to the original.
 
 \par The observant logically inclined reader should, at this point, now be suspicious about taking this claim at face value.  What do we mean when we say the transformed program should be ``the same''?  The next example, which shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example, elucidates the necessity to be precise.  First, however, we will need a few lemmas that show our opaque predicate is indeed such, in various incarnations to be used in proofs.
 
@@ -331,7 +335,7 @@ holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, s
 
 \begin{example}\label{firstfact}
     For any $x\in \mathbb{N}$ and any program $c_2$, $opaque\_trans$ x $fact\_nonzero$ $c2$ with input $X=3$ yields output $Y=6$.  In Coq, however, it looks as follows.
-    \begin{verbatim} Example factorial\_3\_opaque\_trans:
+    \begin{verbatim} Example factorial_3_opaque_trans:
   forall x c2, 
   opaque_trans x fact_nonzero 
   c2 / { X --> 3 } 
@@ -461,7 +465,7 @@ Definition Hoare_fidelity_xy c1 c2
  hoare_triple (as_x xo) c2 (as_y yo).\end{verbatim}
 \end{defin}
 
-Indeed, the decision to use the factorial program in the previous examples for illustrative purposes was an unnecessary detail, so we replace it with an arbitrary program.
+Indeed, the decision to use the factorial program in the previous examples for illustrative purposes was an unnecessary detail, so we replace it with an arbitrary program. See  \cite{Weyun} for proof of the theorem \ref{hoare_xy_main}.
 
 \begin{theorem}\label{hoare_xy_main}
 For all programs $c_1$ and $c_2$, and all $x \in \mathbb{N}$, the transformed program $opaque\_trans'(x, c_1, c_2)$ preserves the Hoare fidelity with respect to input X and output Y of $c_1$.  
@@ -472,6 +476,27 @@ Theorem Opaque_trans_hoare_fidelity_xy:
     (opaque_trans' x c1 c2).
 \end{verbatim}
 \end{theorem}
+
+Let's attempt to generalize this further\footnote{We've generalized to the point that the specific program no longer matters, but we are still requiring a specific subset of possible pre- and post-conditions.} now.
+
+\begin{defin}[Hoare fidelity (general)]
+A program $c_2$ preserves the Hoare fidelity of a program $c_1$ with respect to pre-condition $P$ and post-condition $Q$, if the validity of the Hoare triple
+\[
+(| P |)\ c_1\ (| Q |)
+\]
+implies the validity of the Hoare triple
+\[
+(| P |)\ c_2\ (| Q |).
+\]
+In Coq,
+\begin{verbatim}
+Definition Hoare_fidelity c1 c2 P Q :=
+  hoare_triple P c1 Q 
+     -> hoare_triple P c2 Q.
+\end{verbatim}
+\end{defin}
+
+We would like to generalize the theorem \ref{hoare_xy_main} even further and prove it for general pre-conditions $P$ and post-conditions $Q$ but we cannot. We will run into this exact same problem later in Section \ref{flattenif} and provide a solution there.  
 
 \subsection{A formulation without assignment}\label{noass}
 In the first presentation of the opaque predicate transformation from Section \ref{naive}, we used a program that allowed
@@ -485,6 +510,21 @@ equation appears on a single line instead of a number of assignments, which may 
 easier to detect, but on the other hand, it can access any variable already being used (and
 in the case of IMP, also any variable not already being used; recall a state in IMP is a total map
 from strings to $\mathbb{N}$ and all variables have default value 0).  In this case, state equivalence can be proven in general.
+
+\begin{verbatim}
+Definition 
+   make_opaque_pred (a1 a2: aexp): bexp 
+      := BEq a1 a2.
+Definition 
+   make_opaque_pred_IFB b c1 c2 
+      := IFB b THEN c1 ELSE c2 FI.
+\end{verbatim}
+
+\begin{theorem}\label{generalcequiv}
+If a predicate $b$ is boolean equivalent to true, then for any programs $c1$ and $c2$,
+the program $c1$ is boolean equivalent to the program resulting from applying make\_opaque\_pred
+to $b$, $c1$, and $c2$. 
+\end{theorem}
 
 The power of proving a theorem to this level of generality is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the predicate supplied is indeed an opaque predicate.
 
@@ -516,7 +556,7 @@ is valid.
 \end{example}
 
 \begin{example}\label{hoare23}
-Now to simulate an attacker\footnote{This thesis is primarily focused on correctness rather than security models.  We're just assuming that we have an attacker performing static analysis on the code, and that he or she doesn't know the opaque predicate is always true or always false.  Under that assumption, we show that they obtain weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
+Now to simulate an attacker\footnote{This research is primarily focused on correctness rather than security models.  We're just assuming that we have an attacker performing static analysis on the code, and that he or she doesn't know the opaque predicate is always true or always false.  Under that assumption, we show that they obtain weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
 \[
 (|X=3|)\ trans\_fact\_program\ (|Y=6 \lor Y=9|).
 \]
@@ -825,7 +865,7 @@ Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 \bibitem{b7} George C. Necula: Proof-Carrying Code. POPL 1997: 106-119. 
 
 % New items
-\bibitem{WeiRepo} Weiyun Lu, ``GitHub repository to accompany the present thesis,'' \url{https://github.com/weiyunlu/coq-certified-obfuscation}, 2019 
+\bibitem{WeiRepo} Weiyun Lu, ``GitHub repository to accompany the present research,'' \url{https://github.com/weiyunlu/coq-certified-obfuscation}, 2019 
 \bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
 A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
