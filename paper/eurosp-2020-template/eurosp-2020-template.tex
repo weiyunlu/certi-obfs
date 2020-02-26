@@ -261,10 +261,6 @@ As an example, let $st$ be the state where the value of every variable is 0.  Le
 Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical (see \cite{SFV2}).
 
 \section{Opaque predicates in IMP/Coq}
-
-We now enter the main topic of the thesis proper, formalizing and certifying the opaque predicate transformation mentioned earlier. 
-
-\subsection{Opaque predicate obfuscation}\label{subsec: opaquedefn}
 	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas in this thesis.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the transformation but hard to deduce by an attacker \cite{Prada}. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance.
 
 Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
@@ -278,10 +274,9 @@ An  \emph{opaque predicate} transformation takes as inputs a program to be obfus
 \par In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
 \par However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
 \par Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
-\par All code for this chapter is in the file $OBFS_opaque_predicate.v$ \cite{repo}.
 
-\section{Command equivalence}\label{naive}
-\subsection{Factorial program (countdown nonzero formulation)}\label{Fact}
+\subsection{Command equivalence}\label{naive}
+\begin{defin}[Factorial program (countdown nonzero formulation)]\label{Fact}
     The following IMP program computes the factorial of a nonzero natural number.  The input is read from $X$, temporary values are stored as $Z$, and the factorial of the input is stored in $Y$ as the output.
 \begin{verbatim}
 Definition fact_nonzero : com :=
@@ -292,6 +287,7 @@ Definition fact_nonzero : com :=
     Z ::= Z - 1
   END.
 \end{verbatim}
+\end{defin}
 
     The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, however, as it is neither too complex nor completely trivial.
 
