@@ -225,7 +225,7 @@ We now give the necessary definitions and theorems from Software Foundations \ci
 
 \par We use the \emph{IMP} language defined within the Software Foundations Coq files for our code obfuscation formalisms.  IMP, which simply stands for imperative, is a bare-bones simple imperative language, like C stripped of all nonessential features.  This simplicity allows us to focus on the nuts and bolts of formally specifying and proving correct individual obfuscating transformations, emphasizing modularity.
 
-\par Since IMP is written inside Coq, we can formally reason about not just individual programs, but entire classes of programs, and even the language itself.  We give the definitions, lemmas, and theorems necessary for our work, but will omit many details and proofs.  
+\par Since IMP is written inside Coq, we can formally reason about not just individual programs, but entire classes of programs, and even the language itself.  We give the definitions, lemmas, and theorems necessary for our work, but will omit many details and proofs (see \cite{WeiRepo} for omitted details).  
 
 \par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
 
@@ -250,10 +250,15 @@ Definition cequiv (c1 c2 : com) : Prop
 
 \begin{defin}[Assertion]
 An \emph{assertion} about a program's state, formally, is a function from states to propositions.
-\begin{verbatim}   Definition Assertion := state -> Prop.\end{verbatim}
+\begin{verbatim}   
+Definition Assertion := 
+                     state -> Prop.
+\end{verbatim}
 \par Informally, for some assertion $P$ and some state $st$, the proposition $P(st)$ represents the statement that $P$ holds in state $st$.  
 As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $P(st)$ is the proposition ``$x = 0$ in the state $st$".
 \end{defin}
+
+Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical (see \cite{SFV2}).
 
 \section{Opaque predicates in IMP/Coq}
 
@@ -820,9 +825,7 @@ Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 
 \bibitem{CompCert} 	Xavier Leroy, ``Formal verification of a realistic compiler,'' Commun. ACM 52(7): 107-115 (2009)
 \bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
+
 \bibitem{b7} George C. Necula: Proof-Carrying Code. POPL 1997: 106-119. 
 
 % New items
@@ -830,8 +833,8 @@ Programs and Proofs, CPP 2016, pages 176-187, New York, NY, USA, 2016. ACM.
 \bibitem{CollbergTax} C. Collberg, C. Thomborson, and D. Low.
 A Taxonomy of Obfuscating Transformations.
 Technical Report 148, Department of Computer Science, University of Auckland, July 1997.
-\bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, Cat?alin Hri?cu, Vilhelm Sjöberg, Andrew ?
-Tolmach, and Brent Yorgey. Programming Language Foundations. Software Foundations series, volume 2. Electronic textbook, May 2018.
+\bibitem{SFV2} Benjamin C. Pierce, Arthur Azevedo de Amorim, Chris Casinghino, Marco Gaboardi, Michael Greenberg, C\u{a}t\u{a}lin Hri\c{t}cu, Vilhelm Sj\"oberg, Andrew 
+Tolmach, and Brent Yorgey. ``Programming Language Foundations,''. Software Foundations series, volume 2. Electronic textbook, May 2018.
 \bibitem{CoNa} 	Christian S. Collberg, Jasvir Nagra:
 Surreptitious Software - Obfuscation, Watermarking, and Tamperproofing for Software Protection. Addison-Wesley Software Security Series, Addison-Wesley 2010, ISBN 978-0-321-54925-9, pp. I-XXVII, 1-748
 \bibitem{Prada} Mila Dalla Preda, Matias Madou, Koen De Bosschere, Roberto Giacobazzi:
