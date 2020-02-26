@@ -28,30 +28,43 @@
 
 \title{Towards Certified Program Obfuscation}
 
-\author{\IEEEauthorblockN{Weiyun Lu}
-\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
-\textit{University of Ottawa}\\
-Ottawa, Canada \\
-WLU058@uottawa.ca}
-\and
-\IEEEauthorblockN{Bahman Sistany}
-\IEEEauthorblockA{\textit{Cloakware Research} \\
-\textit{Irdeto Canada}\\
-Ottawa, Canada \\
-bahman.sistany@irdeto.com}
-\and
-\IEEEauthorblockN{Amy Felty}
-\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
-\textit{University of Ottawa}\\
-Ottawa, Canada \\
-afelty@uottawa.ca}
-\and
-\IEEEauthorblockN{Philip Scott}
-\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
-\textit{University of Ottawa}\\
-Ottawa, Canada \\
-philip.scott@uottawa.ca}
-}
+\author{\IEEEauthorblockN{Weiyun Lu\IEEEauthorrefmark{1},
+    Bahman Sistany\IEEEauthorrefmark{2},
+    Amy Felty\IEEEauthorrefmark{1}\IEEEauthorrefmark{3},
+    Philip Scott\IEEEauthorrefmark{3}\IEEEauthorrefmark{1}}
+  \IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical
+    Engineering and Computer Science, University of Ottawa, Canada\\
+    Email: \{wlu058,afelty,philip.scott\}@uottawa.ca}
+  \IEEEauthorblockA{\IEEEauthorrefmark{2}Cloakware Research
+    Irdeto Canada, Ottawa, Canada\\
+    Email: bahman.sistany@irdeto.com}
+  \IEEEauthorblockA{\IEEEauthorrefmark{3}Department of Mathematics and
+    Statistics, University of Ottawa, Canada}}
+
+%\author{\IEEEauthorblockN{Weiyun Lu}
+%\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+%\textit{University of Ottawa}\\
+%Ottawa, Canada \\
+%WLU058@uottawa.ca}
+%\and
+%\IEEEauthorblockN{Bahman Sistany}
+%\IEEEauthorblockA{\textit{Cloakware Research} \\
+%\textit{Irdeto Canada}\\
+%Ottawa, Canada \\
+%bahman.sistany@irdeto.com}
+%\and
+%\IEEEauthorblockN{Amy Felty}
+%\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+%\textit{University of Ottawa}\\
+%Ottawa, Canada \\
+%afelty@uottawa.ca}
+%\and
+%\IEEEauthorblockN{Philip Scott}
+%\IEEEauthorblockA{\textit{School of Electrical Engineering and Computer Science} \\
+%\textit{University of Ottawa}\\
+%Ottawa, Canada \\
+%philip.scott@uottawa.ca}
+%}
 
 \maketitle
 
@@ -206,9 +219,6 @@ In this chapter we provide necessary background information used for formal veri
 \subsection{The Coq proof assistant}
 
 Coq \cite{Coq} is a formal proof management system, an implementation of the \emph{Calculus of (co)inductive constructions}, which provides a formal language in which one can write mathematical definitions, algorithms and theorems, and an environment for the development of machine-checked proofs.  It is implemented (mostly) in OCaml\footnote{See \href{https://www.ocaml.org}{https://www.ocaml.org}.} and (a little bit of) C.
-
-\subsection{CompCert certified C compiler}
-Something formally defined and proven in Coq leads to a high assurance of correctness --- one example of this is \emph{CompCert} \cite{CompCert} by Xavier Leroy's team, a formally verified compiler written in Coq for (a large subset) of C.  The upshot of CompCert being formally verified is that it will not cause \emph{miscompilation errors} --- that is, the executable code produced is proven to behave exactly as the semantics specified by the source program.
 
 \section{Software Foundations --- the IMP language}
 We now give the necessary definitions and theorems from Software Foundations \cite{SFV2}, an interactive textbook on the mathematical foundations of reliable software, which is actually entirely a Coq script.
