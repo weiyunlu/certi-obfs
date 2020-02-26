@@ -263,7 +263,7 @@ An  \emph{opaque predicate} transformation takes as inputs a program to be obfus
 \par In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
 \par However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
 \par Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
-\par All code for this chapter is in the file \verb$OBFS_opaque_predicate.v$ \cite{repo}.
+\par All code for this chapter is in the file $OBFS_opaque_predicate.v$ \cite{repo}.
 
 \section{Command equivalence}\label{naive}
 \subsection{Factorial program (countdown nonzero formulation)}\label{Fact}
@@ -308,7 +308,7 @@ Definition opaque_trans x c1 c2 :=
   Z'' ::= Z'' * Z'' ;;
   IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
 \end{verbatim}
-holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by \verb$opaque_trans$ is equivalent to the original.
+holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by $opaque_trans$ is equivalent to the original.
 
 \par The observant logically inclined reader should, at this point, now be suspicious about taking this claim at face value.  What do we mean when we say the transformed program should be ``the same''?  The next example, which shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example, elucidates the necessity to be precise.  First, however, we will need a few lemmas that show our opaque predicate is indeed such, in various incarnations to be used in proofs.
 
@@ -551,25 +551,25 @@ baselinestretch=1.2,
 fontsize=\footnotesize
 ] {c}
 int i;
-int s;
-s = 1;
-while (s != 0) {
-  switch (s) {
+int swVar;
+swVar = 1;
+while (swVar != 0) {
+  switch (swVar) {
     case 1:
       i = 0;
-      s = 2;
+      swVar = 2;
       break;
     case 2:
       if (i < 100) {
-        s = 3;
+        swVar = 3;
       break;
       } else {
-        s = 0;
+        swVar = 0;
         break;
       }
     case 3:
       i++;
-      s = 0;
+      swVar = 0;
       break;
   }
 }
@@ -581,6 +581,100 @@ We will, in Section \ref{4.2}, first add the syntax and semantics of Switch stat
 
 
 \subsection{Augmenting IMP with Switch (IMP+Switch)}\label{4.2}
+Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements, which we'll call the \emph{IMP+Switch} language.  We'll also define a new type, $address$, which is just a wrapper for a $nat$ and a type $lc$ (list of commands) which is a list of possible switch branches indexed by $address$, and then redefine the type $com$ to support switch statements.
+
+\begin{verbatim}
+Definition address := nat.
+Definition lc := list (address * com).
+\end{verbatim}
+
+\begin{verbatim}
+Inductive com : Type :=
+  ...
+  | CSwitch : 
+    string -> 
+      list (address * com) -> com.
+\end{verbatim}
+
+Next, we create a function to search a $lc$ by address.
+\begin{verbatim}
+Fixpoint lc_lookup 
+  (tlc: lc) (adr: address): 
+     option com := ... 
+\end{verbatim}
+
+We accordingly redefine the command evaluation semantics to include switch statements.
+
+The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weyun}).
+
+\begin{theorem}\label{deterministic}\index{deterministic}
+Command evaluation is deterministic, in the sense that if a command evaluates a state $st$ to a state $st1$, but also to some (a priori, possibly) other state $st2$, then it must be the case that $st1 = st2$.  In Coq,
+\begin{verbatim}
+Theorem ceval_deterministic: 
+  forall c st st1 st2,
+   c / st \\ st1 -> 
+   c / st \\ st2 -> 
+         st1 = st2.
+\end{verbatim}
+\end{theorem}
+
+\subsection{Flattening If-Then-Else in IMP+Switch}\label{flattenif}\label{4.3}
+
+\begin{defin}
+We build out an If-Then-Else statement to be flattened is the following function in Coq. The $header$ and $footer$ parameters are simply any IMP commands that occur before and after the If-Then-Else statement. Since, we wish to prove command equivalence between the original and transformed programs, so we note that $swVar$ is introduced with value $0$ and ends with value $5$ in the transformed program; hence, we'll preprocess the original program to be transformed by adding in these assignments.
+ 
+\begin{verbatim}
+Definition 
+  preprocess_program 
+    header cond c1 c2 footer: 
+      com := ... 
+ \end{verbatim}
+\end{defin}
+
+\begin{defin}
+Transforming a program with control flow flattening on an If-Then-Else statement takes the If-Then-Else components and builds a 'switch' wrapped in a 'while' with 'cases' appropriately handled.
+\begin{verbatim}
+Definition 
+   transform_program 
+     header cond c1 c2 footer: 
+       com := ...
+\end{verbatim}
+\end{defin}
+
+\begin{defin}[WorldEater program]
+We'll use a minimal example program for this section, which we call \emph{WorldEater}, a program that does nothing if the variable $X$ is zero, and assigns $X=1$ otherwise.
+
+\begin{verbatim}
+Definition WorldEater : com :=
+  IFB (X = 0) THEN
+    SKIP
+  ELSE
+    X ::= 1
+  FI.
+\end{verbatim}
+\end{defin}
+
+\begin{example}
+To preprocess $WorldEater$, we feed its components to \verb$preprocess_program$.
+\begin{verbatim}
+Definition PreprocessWorldEater := 
+  preprocess_program 
+    SKIP (X = 0) SKIP (X ::= 1) SKIP.
+\end{verbatim}
+
+Note that since the header and footer are mandatory, we add $SKIP$s, and the $swVar$ is set to the same initial and final values so we can prove command equivalence to the transformed program.
+\end{example}
+
+\begin{example}
+To transform $WorldEater$, we feed its components to $transform_program$.
+\begin{verbatim}
+Definition TransWorldEater := 
+  transform_program 
+    SKIP (X = 0) SKIP (X ::= 1) SKIP.
+\end{verbatim}
+\end{example}
+
+
 
 \section{Related works}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
@@ -631,6 +725,7 @@ Surreptitious Software - Obfuscation, Watermarking, and Tamperproofing for Softw
 Opaque Predicates Detection by Abstract Interpretation. AMAST 2006: 81-95
 \bibitem{Coq} "The {Coq Proof Assistant}", \url{https://coq.inria.fr}, 2019
 \bibitem{Wang} Chenxi Wang and Jonathan Hill and John Knight and Jack Davidson, ``Software Tamper Resistance: Obstructing Static Analysis of Programs,'' 2000
+\bibitem{Weyun} Weiyun Lu, ``Formally Verified Code Obfuscation in the Coq Proof Assistant,'' Collection: Theses, 2011 -, UOttawa, 2019 
 \end{thebibliography}
 
 \end{document}
