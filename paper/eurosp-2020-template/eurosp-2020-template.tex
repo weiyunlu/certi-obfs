@@ -674,6 +674,109 @@ Definition TransWorldEater :=
 \end{verbatim}
 \end{example}
 
+\begin{example}\label{WE_example}
+The preprocessed and transformed $WorldEater$ program are command equivalent.  In Coq,
+\begin{verbatim}
+Example WorldEaterTransEquiv : 
+  cequiv 
+    PreprocessWorldEater 
+    TransWorldEater.
+\end{verbatim}
+The proof (see \cite{Weyun} for details) follows the same structure and ideas as the more general Theorem \ref{maintheo} to come.
+\end{example}
+
+We now wish to generalize this example, and state a general theorem that all programs' preprocessed and transformed forms are command equivalent. However the fact that we haven't fully accounted for the newly introduced $swVar$ which controls the switch statement is problematic. If the original program already uses this variable in some way, then everything could break.
+
+\begin{defin}[Evaluation invariance]
+A program $c$ is \emph{evaluation invariant} with respect to a variable $X$ if, for all states $st$ and $st'$ and all $n \in \mathbb{N}$, $c$ evaluates $st$ to $st'$ if and only if $c$ evaluates $st$ updated with $(X \longrightarrow n)$ to $st'$ updated with $(X\longrightarrow n)$.
+\par In other words, if the only thing that changes about the start state is the value of $X$, there is no impact on evaluation with the sole exception of the same change to $X$ in the end state.  In Coq,
+\begin{verbatim}
+Definition eval_invariant c X := 
+  forall n st st', 
+    c / st \\ st' <-> 
+    c / st & { X --> n } 
+         \\ st' & { X --> n }.
+\end{verbatim}
+\end{defin}
+
+\begin{lemma}\label{independence}
+Evaluation invariance implies evaluation independence in the sense that, if a command $c$ is evaluation invariant with respect to $X$, then if $c$ evaluates a state $st$ updated with $(X\longrightarrow n)$ for some $n \in \mathbb{N}$ to $st'$, then $c$ also evaluates $st$ to $st'$.  In Coq,
+\begin{verbatim}
+Lemma eval_inv_imp_eval_ind: 
+  forall c X n st st', 
+  eval_invariant c X ->
+  c / st & { X --> n } \\ st' -> 
+  c / st \\ st'.
+\end{verbatim}
+\end{lemma}
+
+\begin{theorem}\label{maintheo}
+Control flow flattening of If-Then-Else constructs is sound in the following sense.  
+\par Fix the variable \verb$swVar$ for the control flow flattening transformation.  For any program of the form $header ;; IFB cond THEN c1 ELSE c2 END ;; footer$, we have command equivalence between the programs
+\begin{verbatim}preprocess_program ...\end{verbatim}
+and
+\begin{verbatim}transform_program ...\end{verbatim}
+as long as the following hold:
+\begin{itemize}
+    \item The commands $footer$, $c1$, and $c2$ are evaluation invariant with respect to $swVar$.
+    \item The boolean condition $cond$ is boolean invariant with respect to $swVar$.
+\end{itemize}
+\end{theorem}
+
+\subsection{Flattening a While-Do-End construct}\label{4.4}
+We now switch gears and study (as well as formalize) an example of dismantling and then flattening a While-Do-End construct described in \cite{Wang}
+
+Starting with a program with a While-Do-End construct, it is \emph{dismantled} into a number of basic blocks (sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  The targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
+\par The next level of the transformation is reminiscent of the transformation studied in the first half of this chapter, wherein these GoTos are replaced by entry into a switch statement.  In keeping consistent with prior terminology, this transformation will be called flattening.  We'll develop a different language in the next section, however, and model this a bit differently from the switch statements of Sections \ref{4.2} and \ref{4.3}, as we need to consider basic blocks as first class citizens.
+
+\subsection{Wrapping IMP in a flowchart language (IMP+Flow)}\index{IMP+Flow}
+
+In this section, we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart. We also define evaluation relations for basic blocks and program of basic blocks (see \cite{Weyun} for details).
+
+\par This language is similar to intermediate languages that are transpiled to and used in the commercial obfuscation tools such as Cloakware's obfuscation engine. While very cumbersome to actually write programs in, it is well-suited to control flow flattening algorithms due to its treatment of basic blocks (of code) as first-class citizens.
+
+\par Note here that the underlying program is the original IMP, and not the IMP+Switch defined in Section \ref{4.2}.  We handle switch statements differently here, by defining them as a type of block.
+
+\subsection{Flattening While-Do-End in IMP+Flow}
+
+Starting with an example program in IMP proper:
+
+\begin{defin}
+    
+    \begin{verbatim}
+Definition OriginalCommand : com :=
+  WHILE (A <= 2) DO
+    B ::= A + B ;;
+    IFB (!(B <= 4)) THEN
+      B ::= B - 1
+    ELSE SKIP FI ;;
+    A ::= A + 1
+  END ;;
+  RETURN ::= A * B.
+  \end{verbatim}
+  \end{defin}
+
+We transform it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \section{Related works}
