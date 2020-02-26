@@ -433,15 +433,19 @@ Definition opaque_trans' x c1 c2 :=
 \begin{example}\label{hoarel2}
     We now prove the same Hoare triple holds with the obfuscated factorial program in place of the original program.
     \[
-     \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com, (|X=x_0|)\ opaque\_trans'\ (X, fact\_program, c_2)\ (|Y=x_0!|)
+    \begin{array}{c}
+    \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com, (|X=x_0|)\\ opaque\_trans'\ (X, fact\_program, c_2)\ (|Y=x_0!|)
+    \end{array}
     \]
+     \noindent    
     which in Coq is
-    \begin{verbatim}
+\begin{verbatim}
 Example factorial_all_hoare_opaque: 
 forall x xo c2,
   {{ as_x xo }} 
      (opaque_trans' x fact_program c2) 
-  {{ as_y (fact xo) }}.\end{verbatim}
+  {{ as_y (fact xo) }}.
+\end{verbatim}
 \end{example}
 
 We've now successfully shown that our factorial program, both with and without the opaque predicate transformation, satisfies a Hoare triple of the form
