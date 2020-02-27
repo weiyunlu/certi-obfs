@@ -134,9 +134,9 @@ assert(y > 2);
 
 In general, though, most transformations, whether optimizations or obfuscations but specially obfuscations, invalidate assertions that hold true about the ``before'' version. Obfuscation is especially troublesome because the main goal of obfuscation is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. More formally, according to Barak et al. as cited in \cite{BanescuCGNP16} obfuscators are programs that transform input programs (e.g. similar to a compiler) into output programs where the output programs satisfy three properties. The output programs:
 \begin{enumerate}
-   \item Must be semantically equivalent to the input program (functionality property),
-   \item Must be at most polynomially bigger or slower than the input program (slowdown property), and
-   \item Must be as ``hard to analyze and de-obfuscate'' as a blackbox version of the program (virtual black-box property).
+   \item Must be semantically equivalent to the input program (functionality property), \label{itm:firstproperty}
+   \item Must be at most polynomially bigger or slower than the input program (slowdown property), and \label{itm:secondproperty}
+   \item Must be as ``hard to analyze and de-obfuscate'' as a blackbox version of the program (virtual black-box property). \label{itm:thirdproperty}
 \end{enumerate}
 ``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
 
@@ -865,6 +865,17 @@ Clight is the first intermediate language in the CompCert compiler workflow, and
 
 \subsection*{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions}
 \par \emph{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions} \cite{Blazy3} mixed boolean-arithmetic continues to work in Clight, which studies obfuscations that involve mixing arithmetic operators and bitwise boolean operators.  This is another data obfuscation which appears frequently in real-world binary code, but as it is based on features wildly beyond the capabilities of IMP, a detailed discussion is beyond the scope of the present work.
+
+\section{Future work}
+The work done to date on formal verification of obfuscation, both in the present work and in the papers of Dr. Blazy et al., while providing a solid proof-of-concept that obfuscation tools of the future could support formal verification, are still limited in scope in the sense that they treat individual transformations.
+\par A real world obfuscator mixes many different transformations together at once, often in non-deterministic ways for \emph{diversification} of obfuscations, and so some form of compositionality would need to be implemented on these formal proofs to be able to use them together and preserve the desired formulation of correctness. 
+\par Furthermore, we (along with the three aforementioned pieces of related work) have, in the formal setting of Coq, only tackled one desired property of obfuscation --- correctness.  That is, some form of the semantics of the program, or relationship between inputs and outputs, should be preserved (obfuscation property \ref{itm:firstproperty}). But there are, of course, other properties that have not been touched upon, namely properties \ref{itm:secondproperty} and \ref{itm:thirdproperty}.
+\par In closing, we stress, once more, that it \emph{is} important to actually apply formal specifications and methods to security goals and metrics in some form, so we can come full circle and give prospective clients of an obfuscation tool a clear answer to the \emph{other} big question ``How exactly will using this improve the security of my programs?" and be able to back our answer with a proof that it actually does so.
+
+
+
+
+
 
 
 
