@@ -225,7 +225,7 @@ We now give the necessary definitions and theorems from Software Foundations \ci
 
 \par We use the \emph{IMP} language defined within the Software Foundations Coq files for our code obfuscation formalisms.  IMP, which simply stands for imperative, is a bare-bones simple imperative language, like C stripped of all nonessential features.  This simplicity allows us to focus on the nuts and bolts of formally specifying and proving correct individual obfuscating transformations, emphasizing modularity.
 
-\par Since IMP is written inside Coq, we can formally reason about not just individual programs, but entire classes of programs, and even the language itself.  We give the definitions, lemmas, and theorems necessary for our work, but will omit many details and proofs (see \cite{WeiRepo} for omitted details).  
+\par Since IMP is written inside Coq, we can formally reason about not just individual programs, but entire classes of programs, and even the language itself.  We give the definitions, lemmas, and theorems necessary for our work, but will omit many details and proofs (see \cite{Weyun} for omitted details and \cite{WeiRepo} for the Coq code and further details).  
 
 \par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
 
@@ -567,14 +567,16 @@ Now to simulate an attacker\footnote{This research is primarily focused on corre
 \end{example}
 
 \section{Control flow flattening in IMP/Coq}\label{Ch4}
-Reverse engineering tools such as the one we saw in the Introduction can at a glance reveal some information about the \emph{control flow} of the program, or the rough structure as delineated by the flow of blocks of code through If-Then-Else, While-Do-End, Switch, and Jump constructs.
+Today's reverse engineering tools and/or other static analysis tools can at a glance reveal some information about the \emph{control flow} of the program, or the rough structure as delineated by the flow of blocks of code through If-Then-Else, While-Do-End, Switch, and Jump constructs. 
 
-\par The obfuscation technique to make this difficult to analyze, then, is \emph{control flow flattening}, which aims to break apart all of these constructs that would reveal information about a program's control flow, and flatten an entire program into a single semantically equivalent switch statement inside a while loop.
+%Furthermore \emph{symbolic execution} engines and SMT solvers are increasingly used to figure out the ``fake'' control flows and eliminate them from the view. 
+
+\par On of the obfuscation techniques to make this difficult to analyze, then, is \emph{control flow flattening}, which aims to break apart all of these constructs that would reveal information about a program's control flow, and flatten an entire program into a single semantically equivalent switch statement inside a while loop.
 
 \par For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}.  
 
 \subsection{Flattening an If-Then-Else construct}
-For the first half of this chapter, we will focus in on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (adapted from \cite{Blazy2}):
+For the first half of this chapter, we will focus in on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (see listing \ref{lst:beforeflatten} which is adapted from \cite{Blazy2}):
 
 \begin{listing}
 \caption{If-Then-Else}
@@ -587,11 +589,16 @@ baselinestretch=1.2,
 fontsize=\footnotesize
 ] {c}
 int i;
-i = 0;
+i = 0; // Header
 if (i < 100) 
 {
   i++;
 }
+else
+{
+  i = 9;
+}
+// Footer
 \end{minted}
 \end{listing}
 
@@ -607,24 +614,29 @@ fontsize=\footnotesize
 ] {c}
 int i;
 int swVar;
-swVar = 1;
-while (swVar != 0) {
+swVar = 0;
+while (swVar <= 4) {
   switch (swVar) {
+    case 0:
+      i = 0; // Header
+      swVar = 1;
     case 1:
-      i = 0;
-      swVar = 2;
-      break;
-    case 2:
       if (i < 100) {
-        swVar = 3;
-      break;
+        swVar = 2;
+        break;
       } else {
-        swVar = 0;
+        swVar = 3;
         break;
       }
+    case 2:
+      i++; swVar = 4;
+      break;
     case 3:
-      i++;
-      swVar = 0;
+      i = 9; swVar = 4;
+      break;
+    case 4:
+      // Footer
+      swVar = 5;
       break;
   }
 }
@@ -660,7 +672,7 @@ Fixpoint lc_lookup
 
 We accordingly redefine the command evaluation semantics to include switch statements.
 
-The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weyun}).
+The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weyun} for details).
 
 \begin{theorem}\label{deterministic}\index{deterministic}
 Command evaluation is deterministic, in the sense that if a command evaluates a state $st$ to a state $st1$, but also to some (a priori, possibly) other state $st2$, then it must be the case that $st1 = st2$.  In Coq,
@@ -676,7 +688,7 @@ Theorem ceval_deterministic:
 \subsection{Flattening If-Then-Else in IMP+Switch}\label{flattenif}\label{4.3}
 
 \begin{defin}
-We build out an If-Then-Else statement to be flattened is the following function in Coq. The $header$ and $footer$ parameters are simply any IMP commands that occur before and after the If-Then-Else statement. Since, we wish to prove command equivalence between the original and transformed programs, so we note that $swVar$ is introduced with value $0$ and ends with value $5$ in the transformed program; hence, we'll preprocess the original program to be transformed by adding in these assignments.
+We build out an If-Then-Else statement to be flattened by the following function in Coq. The $header$ and $footer$ parameters are simply any IMP commands that occur before and after the If-Then-Else statement. Since, we wish to prove command equivalence between the original and transformed programs, we note that $swVar$ is introduced with value $0$ and ends with value $5$ in the transformed program; hence, we'll preprocess the original program to be transformed by adding in these assignments.
  
 \begin{verbatim}
 Definition 
@@ -721,7 +733,7 @@ Note that since the header and footer are mandatory, we add $SKIP$s, and the $sw
 \end{example}
 
 \begin{example}
-To transform $WorldEater$, we feed its components to $transform_program$.
+To transform $WorldEater$, we feed its components to $transform\_program$.
 \begin{verbatim}
 Definition TransWorldEater := 
   transform_program 
@@ -730,7 +742,7 @@ Definition TransWorldEater :=
 \end{example}
 
 \begin{example}\label{WE_example}
-The preprocessed and transformed $WorldEater$ program are command equivalent.  In Coq,
+The preprocessed and transformed $WorldEater$ programs are command equivalent.  In Coq,
 \begin{verbatim}
 Example WorldEaterTransEquiv : 
   cequiv 
@@ -767,7 +779,8 @@ Lemma eval_inv_imp_eval_ind:
 
 \begin{theorem}\label{maintheo}
 Control flow flattening of If-Then-Else constructs is sound in the following sense.  
-\par Fix the variable \verb$swVar$ for the control flow flattening transformation.  For any program of the form $header ;; IFB cond THEN c1 ELSE c2 END ;; footer$, we have command equivalence between the programs
+\par Fix the variable $swVar$ for the control flow flattening transformation.  
+For any program of the form \verb$header;;IFB cond THEN c1 ELSE c2 END$ \verb$;; footer$, we have command equivalence between the programs
 \begin{verbatim}preprocess_program ...\end{verbatim}
 and
 \begin{verbatim}transform_program ...\end{verbatim}
@@ -786,9 +799,9 @@ Starting with a program with a While-Do-End construct, it is \emph{dismantled} i
 
 \subsection{Wrapping IMP in a flowchart language (IMP+Flow)}\index{IMP+Flow}
 
-In this section, we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart. We also define evaluation relations for basic blocks and program of basic blocks (see \cite{Weyun} for details).
+In this section, we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart\footnote{Note that our formulation for \emph{flowchart} is different from \cite{SFV2}}. We also define evaluation relations for basic blocks and programs of basic blocks (see \cite{Weyun} for details).
 
-\par This language is similar to intermediate languages that are transpiled to and used in the commercial obfuscation tools such as Cloakware's obfuscation engine. While very cumbersome to actually write programs in, it is well-suited to control flow flattening algorithms due to its treatment of basic blocks (of code) as first-class citizens.
+\par This language is similar to intermediate languages that are transpiled to and used in the commercial obfuscation tools such as Cloakware's obfuscation engine \cite{Cloakware}. While very cumbersome to actually write programs in, it is well-suited to control flow related algorithms due to its treatment of basic blocks (of code) as first-class citizens.
 
 \par Note here that the underlying program is the original IMP, and not the IMP+Switch defined in Section \ref{4.2}.  We handle switch statements differently here, by defining them as a type of block.
 
@@ -811,7 +824,7 @@ Definition OriginalCommand : com :=
   \end{verbatim}
   \end{defin}
 
-We transform it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$.
+We transform it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$ (see \cite{Weyun} for details).
 
 
 
@@ -886,6 +899,8 @@ Opaque Predicates Detection by Abstract Interpretation. AMAST 2006: 81-95
 ``Code obfuscation against symbolic execution attacks,'' ACSAC 2016: 189-200
 \bibitem{Barak} Boaz Barak, Oded Goldreich, Russell Impagliazzo, Steven Rudich, Amit Sahai, Salil P. Vadhan, Ke Yang:
 ``On the (Im)possibility of Obfuscating Programs,'' CRYPTO 2001: 1-18
+\bibitem{Cloakware} 	Clifford Liem, Yuan Xiang Gu, Harold Johnson:
+``A compiler-based infrastructure for software-protection,''. PLAS 2008: 33-44
 \end{thebibliography}
 
 \end{document}
