@@ -26,7 +26,7 @@
 
 \begin{document}
 
-\title{Towards Certified Program Obfuscation}
+\title{Towards Formal Verification of Program Obfuscation}
 
 \author{\IEEEauthorblockN{Weiyun Lu\IEEEauthorrefmark{1},
     Bahman Sistany\IEEEauthorrefmark{2},
@@ -79,7 +79,7 @@
 %\par We describe our work on opaque predicates, a simple control flow obfuscation, and elements of control flow flattening transformation, a more complex control flow obfuscation.  Along the way, we employ Hoare logic as our foundational specification language, as well as augment the IMP language with Switch statements.  We also define a lower-level flowchart language to wrap around IMP for modelling certain flattening transformations, treating blocks of codes as objects in their own right.
 
 Code obfuscation involves transforming a program to a new version that performs the same computation but hides the functionality of the original code.  An important property of such a transformation is that it preserves the behavior of the original program.
-In this paper, we lay the foundation for studying and reasoning about code obfuscating transformations, and show how the preservation of certain behaviours may be formally verified.\footnote{AF: I took out the word ``certify'' here.  There was a discussion at Wei's defense about what this meant.  Rather than explain it in this paper, I think we should just use the word ``verify''.  I suggest we change it in the title also.} To this end, we apply techniques of formal specification and verification using the Coq Proof Assistant.  We use and extend an existing encoding of a simple imperative language in Coq along with an encoding of Hoare logic for reasoning about this language.  We formulate what it means for a program's semantics to be preserved by an obfuscating transformation, and give formal machine-checked proofs that these behaviours or properties hold. We also define a lower-level flowchart language which can be ``wrapped around'' our imperative language, allowing us to model certain flattening transformations and treat blocks of codes as objects in their own right.
+In this paper, we lay the foundation for studying and reasoning about code obfuscating transformations, and show how the preservation of certain behaviours may be formally verified. To this end, we apply techniques of formal specification and verification using the Coq Proof Assistant.  We use and extend an existing encoding of a simple imperative language in Coq along with an encoding of Hoare logic for reasoning about this language.  We formulate what it means for a program's semantics to be preserved by an obfuscating transformation, and give formal machine-checked proofs that these behaviours or properties hold. We also define a lower-level flowchart language which is ``wrapped around'' our imperative language, allowing us to model certain flattening transformations and treat blocks of codes as objects in their own right.
 \end{abstract}
 
 \begin{IEEEkeywords}
