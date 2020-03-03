@@ -24,6 +24,9 @@
 \newtheorem{defin}[theorem]{Definition}
 \newtheorem{example}[theorem]{Example}
 
+% take this out for final version
+\pagestyle{plain}
+
 \begin{document}
 
 \title{Towards Formal Verification of Program Obfuscation}
@@ -264,9 +267,12 @@ later sections, the reader is referred to our repository
 Informally, IMP commands \texttt{c} are defined by the following BNF grammar:
 \texttt{c ::= SKIP | x ::= a | c ;; c | IFB b THEN c ELSE c FI | WHILE b DO c END}.
 In~\cite{SFV2}, this grammar is encoded by defining a new type called \texttt{com} and new keywords (called \emph{constructors} in Coq), one for each element of the grammar, and then defining notation that maps this formal definition to the BNF syntax.  For example, the definition of \texttt{com} includes the following case for assignment statements: \texttt{CAss (x : string) (a : aexp)}, which introduces the \texttt{CAss} constructor and specifies its two arguments along with their types.  A variable is represented using the built-in \texttt{string} type in Coq, the arithmetic expression on the right of an assignment command has type \texttt{aexp}, and the notation specifies that Coq terms of the form \texttt{(CAss x a)} will be written \texttt{x := a}.
-The definition of \texttt{aexp} in~\cite{SFV2} is defined using the same technique---starting from a BNF grammar, constructors are defined and then notation is given so that the syntax matches the grammar.  We omit its definition as well as the definition of \texttt{bexp} for representing boolean expressions, which appear in \texttt{IF} and \texttt{WHILE} commands.
+The definition of \texttt{aexp} in~\cite{SFV2} is defined using the same technique---starting from a BNF grammar, constructors are defined and then notation is given so that the syntax matches the grammar.  We omit its definition as well as the definition of \texttt{bexp} for representing boolean expressions, which appear in \texttt{IFB} and \texttt{WHILE} commands.
 
-To define the operational semantics of IMP, the notion of a state is needed; here we introduce a type called \texttt{state} defined to be an abbreviation for the type \texttt{string -> nat}.  Here, \texttt{nat} is Coq's built in type for natural numbers.  Although, we restrict our formal development to natural numbers, it could be easily extended to other types such as \texttt{int} or \texttt{float}.\footnote{AF: this is as far as I got today; need to continue with defining evaluation, which takes a command and a state to a new state.}
+To define the operational semantics of IMP, the notion of a state is needed; here we introduce a type called \texttt{state} defined to be an abbreviation for the type \texttt{string -> nat}.  Here, \texttt{nat} is Coq's built in type for natural numbers.  Although, we restrict our formal development to natural numbers, it could be easily extended to other types such as \texttt{int} or \texttt{float}.  An \textit{initial state} in Coq is a function that maps all variables to some default value.  States are modified using an update operator.  For example, the state \verb|s & { X --> 3; Y --> 1}| represents a state in which \texttt{s} is modified so that \texttt{X} has the value \texttt{3} and \texttt{Y} has the value \texttt{1}.  The ``\verb|s &|'' can be omitted if the update is to an initial state.
+
+Evaluation of commands can be viewed as a function from a command and a starting state to a new state.  It is encoded as a relation in Coq, and the notation \verb|c / s1 \\ s2| means that starting in state \texttt{s1} and executing \texttt{c} results in a new state \texttt{s2}.  We say that ``\texttt{c} takes \texttt{s1} to \texttt{s2}.''
+We omit the Coq definition of this relation.\footnote{AF: explain one case?  probably not because the examples later will be enough to illustrate}
 
 %, an interactive textbook on the mathematical foundations of reliable software, which is actually entirely a Coq script.
 
@@ -276,54 +282,63 @@ To define the operational semantics of IMP, the notion of a state is needed; her
 
 %\par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
 
-\subsection{Command equivalence}\label{commequiv} 
-    For two commands (IMP programs) $c_1$ and $c_2$ to be equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq,
+\subsection{Command Equivalence}\label{commequiv} 
+    For two commands (IMP programs) $c_1$ and $c_2$ to be equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq, we define \texttt{cequiv} as a predicate that takes two commands as arguments:
 \begin{verbatim}
 Definition cequiv (c1 c2 : com) : Prop 
   := forall (st st' : state), 
 (c1 / st \\ st') <-> (c2 / st \\ st').
 \end{verbatim}
+\texttt{Prop} is the type of logical formulas in Coq, and \texttt{forall} and \texttt{<->} are the notations for universal quantification and logical equivalence, respectively.
 
-
-\subsection{Hoare logic}
+\subsection{Hoare Logic}
 \emph{Hoare logic} is a way for us to prove that executing a program will result in satisfying certain post-conditions, (possibly) conditional on certain pre-conditions being met.  This involves defining a natural way of writing program specifications, along with a compositional proof technique to prove correctness with respect to them.
 \begin{defin}[Hoare triple]
 	A \emph{Hoare triple}, which we sometimes refer to simply as a triple, consists of a pre-condition $P$, a program $c$, and a post-condition $Q$, written
     \[
     	(| P |)\ c\ (| Q |),
     \]
-    which specifies that whenever $P$ is true before execution, running the program $c$ is guaranteed to make $Q$ true after execution.  This informal definition leaves states implicit, but for the formulation in Coq we will need to take states into account.
+    which specifies that whenever $P$ is true before execution, running the program $c$ is guaranteed to make $Q$ true after execution.  
 \end{defin}
+This informal definition leaves states implicit, but for the formulation in Coq we will need to take states into account.
 
 \begin{defin}[Assertion]
 An \emph{assertion} about a program's state, formally, is a function from states to propositions.
 \begin{verbatim}   
-Definition Assertion := 
-                     state -> Prop.
+  Definition Assertion := state -> Prop.
 \end{verbatim}
-\par Informally, for some assertion $P$ and some state $st$, the proposition $P(st)$ represents the statement that $P$ holds in state $st$.  
-As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $P(st)$ is the proposition ``$x = 0$ in the state $st$".
 \end{defin}
+Informally, for some assertion $P$ and some state $st$, the proposition $P(st)$ represents the statement that $P$ holds in state $st$.  
+As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $P(st)$ is the proposition ``$x = 0$ in the state $st$".  In Coq, Hoare triples have three arguments, a command and two assertions:
+\begin{verbatim}
+Definition hoare_triple 
+(c:com) (P Q:Assertion) : Prop :=
+  forall st st', c / st \\ st'  ->
+  P st  -> Q st'.
+\end{verbatim}
+Note that in the formal version, states must be explicit.
 
-Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical (see \cite{SFV2}).
+Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical, except for the \texttt{WHILE} statement (see \cite{SFV2}).
 
-\section{Opaque predicates in IMP/Coq}
+\section{Opaque Predicates in IMP/Coq}
 \label{sec:opaque}
-	An \emph{opaque predicate} \cite{CoNa} is a predicate\footnote{This could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas here.} that always evaluates to either \emph{true} or \emph{false} and the truth-value of which is known to the transformation but hard to deduce by an attacker \cite{Prada}. The code under the \emph{false} branch is never evaluated at runtime so \emph{opaque predicates} incur no runtime performance penalty.
+An \emph{opaque predicate} \cite{CoNa} is a predicate that always evaluates to either \emph{true} or \emph{false} and the truth-value is known to the transformation but hard to deduce by an attacker \cite{Prada}. It could be any statement in a program that could evaluate to true or false, but we will only be concerned with arithmetic formulas here. An opaque predicate is used, for example, in an \texttt{IFB} statement, and in the case when it evaluates to \emph{true}, the code under the \emph{false} branch is never evaluated at runtime.  Thus \emph{opaque predicates} incur no runtime performance penalty.
 
-Of course, the absolutely most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
+Of course, the most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
 
-
-An  \emph{opaque predicate} transformation takes as inputs a program to be obfuscated, $c_1$, an opaque predicate $P$, and a dummy program\footnote{It's not known to an attacker, a priori, that it's a dummy program.  In practice, $c_2$ should be constructed so that it is not obvious; e.g.\ $c_2$ should not be simply an empty program, but should be complicated enough that it looks like it could feasibly be intended to be executed.} $c_2$, and returns the program
+An \emph{opaque predicate transformation} takes as inputs a program to be obfuscated, $c_1$, an opaque predicate $P$, and a dummy program $c_2$, and returns the program:
 \begin{verbatim}
     IFB (P x) THEN c1 ELSE c2 FI.
 \end{verbatim}
+It is not known to an attacker, a priori, that $c_2$ is a dummy program. In practice, $c_2$ should be complicated enough to appear that it could feasibly be intended to be executed. 
 
-\par In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
-\par However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
-\par Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
+In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
 
-\subsection{Command equivalence}\label{naive}
+However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
+
+Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.\footnote{AF: this is as far as I got}
+
+\subsection{Command Equivalence}\label{naive}
 \begin{defin}[Factorial program (countdown nonzero formulation)]\label{Fact}
     The following IMP program computes the factorial of a nonzero natural number.  The input is read from $X$, temporary values are stored as $Z$, and the factorial of the input is stored in $Y$ as the output.
 \begin{verbatim}
@@ -418,7 +433,7 @@ ELSE c2 FI
 \par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
 \par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
 
-\subsection{Hoare logic equivalence}\label{hoarequiv}
+\subsection{Hoare Logic Equivalence}\label{hoarequiv}
 
 In this section, we explore using Hoare logic to specify program conditions, and then generalize the result as much as we can.  The main idea with Hoare logic is that we can be more specific about what we wish a transformation to preserve (in our case, just the value of a single variable before the program runs and the value of a single variable after the program finishes, rather than the entire state as in the previous section).  First, we'll use a slightly different formulation of the factorial program.
 
@@ -550,7 +565,7 @@ Definition Hoare_fidelity c1 c2 P Q :=
 
 We would like to generalize the theorem \ref{hoare_xy_main} even further and prove it for general pre-conditions $P$ and post-conditions $Q$ but we cannot. We will run into this exact same problem later in Section \ref{flattenif} and provide a solution there.  
 
-\subsection{A formulation without assignment}\label{noass}
+\subsection{A Formulation without Assignment}\label{noass}
 In the first presentation of the opaque predicate transformation from Section \ref{naive}, we used a program that allowed
 the user (that is, the person obfuscating the code) to specify a particular number, and then add a number of assignments before the
 opaque predicate check, and then ultimately noted at the end of Section \ref{naive} that command equivalence (which depends on the full state --- that is, the equality of values of \emph{all} variables) did not
@@ -593,7 +608,7 @@ Example example_fact_opaque_pred:
 \end{verbatim}
 \end{example}
 
-\subsection{Hoare logic - weakened information simulation}\label{weakened}
+\subsection{Weakened Information Simulation}\label{weakened}
 
 We close this chapter with a series of examples that formally demonstrates the obfuscating effect of using an opaque predicate from the point of view of a simulated attacker.  We use Hoare Logic with the factorial program again, with input $X=3$, output $Y=6$, and with the $square\_program$ as the dummy program.
 
@@ -614,7 +629,7 @@ Now to simulate an attacker\footnote{This research is primarily focused on corre
 \]
 \end{example}
 
-\section{Control flow flattening in IMP/Coq}\label{sec:flattening}
+\section{Control Flow Flattening in IMP/Coq}\label{sec:flattening}
 Today's reverse engineering tools and/or other static analysis tools can at a glance reveal some information about the \emph{control flow} of the program, or the rough structure as delineated by the flow of blocks of code through If-Then-Else, While-Do-End, Switch, and Jump constructs. 
 
 %Furthermore \emph{symbolic execution} engines and SMT solvers are increasingly used to figure out the ``fake'' control flows and eliminate them from the view. 
@@ -623,7 +638,7 @@ Today's reverse engineering tools and/or other static analysis tools can at a gl
 
 \par For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}.  
 
-\subsection{Flattening an If-Then-Else construct}
+\subsection{Flattening an If-Then-Else Construct}
 For the first half of this chapter, we will focus in on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (see listing \ref{lst:beforeflatten} which is adapted from \cite{Blazy2}):
 
 \begin{listing}
@@ -839,13 +854,13 @@ as long as the following hold:
 \end{itemize}
 \end{theorem}
 
-\subsection{Flattening a While-Do-End construct}\label{4.4}
+\subsection{Flattening a While-Do-End Construct}\label{4.4}
 We now switch gears and study (as well as formalize) an example of dismantling and then flattening a While-Do-End construct described in \cite{Wang}
 
 Starting with a program with a While-Do-End construct, it is \emph{dismantled} into a number of basic blocks (sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  The targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
 \par The next level of the transformation is reminiscent of the transformation studied in the first half of this chapter, wherein these GoTos are replaced by entry into a switch statement.  In keeping consistent with prior terminology, this transformation will be called flattening.  We'll develop a different language in the next section, however, and model this a bit differently from the switch statements of Sections \ref{4.2} and \ref{4.3}, as we need to consider basic blocks as first class citizens.
 
-\subsection{Wrapping IMP in a flowchart language (IMP+Flow)}\index{IMP+Flow}
+\subsection{Wrapping IMP in a Flowchart Language (IMP+Flow)}\index{IMP+Flow}
 
 In this section, we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart\footnote{Note that our formulation for \emph{flowchart} is different from \cite{SFV2}}. We also define evaluation relations for basic blocks and programs of basic blocks (see \cite{Weyun} for details).
 
@@ -895,15 +910,15 @@ We transform it into the dismantled version which is basically the same program 
 
 
 
-\section{Related works}
+\section{Related Work}
 There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
 
-\subsection*{Towards a formally verified obfuscating compiler}
+%\subsection*{Towards a formally verified obfuscating compiler}
 \par \emph{Towards a formally verified obfuscating compiler} \cite{Blazy1} also uses IMP (their own formulation and not the one from \cite{SFV2}) as the language for obfuscation, but studies data and layout obfuscation techniques, as opposed to the control obfuscation techniques which opaque predicates and control flow flattening fall under \cite{CollbergTax}.
 \par The first particular transformation studied herein is obfuscating integer constants, wherein all integer values are substituted by different ones in a distorted semantics using an obfuscating function $O: \mathbb{N} \to \mathbb{N}$.  The other discussed is variable encoding, which changes the names of variables.  A real-life application of this could be, for instance, to change a descriptive variable name like $account\_balance$ to a string of gibberish.
 \par This is an inherently different class of techniques from the ones studied in the present work, and one can make a simple combinatorial argument that putting them together in the same obfuscation transformation would generate a synergistic effect on making a program more difficult to analyze.
 
-\subsection*{Formal verification of control-flow graph flattening}
+%\subsection*{Formal verification of control-flow graph flattening}
 \par \emph{Formal verification of control-flow graph flattening} \cite{Blazy2} also studies control flow flattening, but the authors use the Clight language of CompCert \cite{CompCert}(the formally verified C compiler in Coq.
 Clight is the first intermediate language in the CompCert compiler workflow, and the strategy used was to prove the correctness of the obfuscation strictly there, from which CompCert's own proofs of semantic preservation give the correctness of the rest of the compilation process ``for free".
 \par On the one hand, this makes the work less elementary and less accessible, as it works with a nontrivial subset of the real C language, but on the other it is clear evidence that formal verification of obfuscation techniques need not be restricted to a small language like IMP (which would never be used in real software development), and other real-world practicalities considered in this paper include simulation techniques and analysis of running time.
@@ -911,10 +926,10 @@ Clight is the first intermediate language in the CompCert compiler workflow, and
 \par In comparing this work to ours, we believe there is merit both in the IMP and the CompCert routes.  In the former, the language used is of minimal complexity, which allows not only for specifications and proofs of transformations to be developed quicker without being bogged down in unnecessarily complicated features of the underlying language, but is also better suited for pedagogical purposes (see our research goal \ref{goal2}). IMP is also Turing complete, so from a theoretical point of view there is no loss of generality in proofs made using it --- they can always be adapted to CompCert later.  But on the other hand, CompCert is, of course, closer to languages that would be of interest to real-world software development and so more practical in that sense.
 \par The authors ran into a similar issue as in the present work of needing to separate switching variables from those in the program to be transformed, but their solution was different --- they instead use a function to parse the program to be transformed and generate a fresh variable which doesn't appear there to be used for the transformation.  From a practical point of view, this is perhaps more natural, and in line with how a real obfuscating tool would function --- generating new variables rather than demand that a certain specifically named variable doesn't exist in the source program.  Theoretically, though, these are equivalent, since any program can contain only finitely many variable names, and there are an infinite number to choose from.
 
-\subsection*{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions}
+%\subsection*{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions}
 \par \emph{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions} \cite{Blazy3} mixed boolean-arithmetic continues to work in Clight, which studies obfuscations that involve mixing arithmetic operators and bitwise boolean operators.  This is another data obfuscation which appears frequently in real-world binary code, but as it is based on features wildly beyond the capabilities of IMP, a detailed discussion is beyond the scope of the present work.
 
-\section{Future work}
+\section{Future Work}
 The work done to date on formal verification of obfuscation, both in the present work and in the papers of Dr. Blazy et al., while providing a solid proof-of-concept that obfuscation tools of the future could support formal verification, are still limited in scope in the sense that they treat individual transformations.
 \par A real world obfuscator mixes many different transformations together at once, often in non-deterministic ways for \emph{diversification} of obfuscations, and so some form of compositionality would need to be implemented on these formal proofs to be able to use them together and preserve the desired formulation of correctness. 
 \par Furthermore, we (along with the three aforementioned pieces of related work) have, in the formal setting of Coq, only tackled one desired property of obfuscation --- correctness.  That is, some form of the semantics of the program, or relationship between inputs and outputs, should be preserved (obfuscation property \ref{itm:firstproperty}). But there are, of course, other properties that have not been touched upon, namely properties \ref{itm:secondproperty} and \ref{itm:thirdproperty}.
