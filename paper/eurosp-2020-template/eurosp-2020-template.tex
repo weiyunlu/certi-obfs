@@ -330,7 +330,7 @@ An \emph{opaque predicate transformation} takes as inputs a program to be obfusc
 \begin{verbatim}
     IFB (P x) THEN c1 ELSE c2 FI.
 \end{verbatim}
-It is not known to an attacker, a priori, that $c_2$ is a dummy program. In practice, $c_2$ should be complicated enough to appear that it could feasibly be intended to be executed. 
+It is not known to an attacker, a priori, that $c_2$ is a dummy program. In practice, $c_2$ should be complicated enough to appear that it could feasibly be intended to be executed. For example, $c_2$ is often an actual command/statement randomly chosen to be the dummy program.
 
 In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
 
