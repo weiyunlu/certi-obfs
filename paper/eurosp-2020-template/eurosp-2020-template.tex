@@ -334,9 +334,9 @@ It is not known to an attacker, a priori, that $c_2$ is a dummy program. In prac
 
 In the Section \ref{naive}, we describe our initial (straightforward, naive) attempt, explicitly defining the transformation to introduce the lines of code that assign variables associated with the opaque predicate (as one may naturally expect to write code in a typical imperative language), and see that trying to state a general theorem about command equivalence ends up being problematic.  
 
-However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
+However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions\footnote{Bahman: this sentence doesn't read well. Amy could you review?} of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
 
-Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.\footnote{AF: this is as far as I got}
+Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation\footnote{Bahman: this is informal and makes sense but should we use proof object terminology? ``who does not have the proof for the opaque predicate''}, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
 
 \subsection{Command Equivalence}\label{naive}
 \begin{defin}[Factorial program (countdown nonzero formulation)]\label{Fact}
@@ -352,7 +352,7 @@ Definition fact_nonzero : com :=
 \end{verbatim}
 \end{defin}
 
-    The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, however, as it is neither too complex nor completely trivial.
+    The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, as it is neither too complex nor completely trivial.
 
 \begin{example}\label{firstoff}
     The $fact\_nonzero$ program with input $X=3$ yields output $Y=6$.  However, the story is not quite so simple (it is true that input $X=3$ yields $Y=6$, but as one can see in the Coq example, the state keeps track of the value of every variable involved in the program.).  The specification of this statement in Coq is
