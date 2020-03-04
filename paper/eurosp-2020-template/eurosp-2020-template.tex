@@ -256,11 +256,11 @@ that we use.  This project, and in particular, the formalization in
 Coq, was motivated by the Cloakware obfuscation tool produced at
 Irdeto, and the interest in showing the correctness of some of its
 core functionality in safety critical environments.\footnote{Much of it was carried out during the
-  first authors co-op term at Irdeto under the supervision of the
-  second author.} For more details of the code in this section, the
+  first author's co-op term at Irdeto under the supervision of the
+  second author.} For more details on IMP in this section, the
 reader is referred to \cite{SFV2}, while for details of the code in
 later sections, the reader is referred to our repository
-\cite{WeiRepo}.
+\cite{WeiRepo}\footnote{Bahman: just marking references to Wei's work. At the end, some may be redundant and/or out of place}.
 %We now give the necessary definitions and theorems from Software Foundations \cite{SFV2}.\footnote{AF: As Wei mentioned, we don't define IMP, but I think we need to in order for the reader to understand the rest of the paper.  We need to define \texttt{com} and \texttt{state} along with all of the notation we use for them (e.g., so that the reader can understand any of the programs like fact\_nonzero).  We need to define the evaluation and the notation used for it (e.g., c / st backslash st').  As well as any other basic definitions and notations used in what is now Section 3.}
 
 \subsection{Syntax and Semantics of IMP}
@@ -272,7 +272,7 @@ The definition of \texttt{aexp} in~\cite{SFV2} is defined using the same techniq
 To define the operational semantics of IMP, the notion of a state is needed; here we introduce a type called \texttt{state} defined to be an abbreviation for the type \texttt{string -> nat}.  Here, \texttt{nat} is Coq's built in type for natural numbers.  Although, we restrict our formal development to natural numbers, it could be easily extended to other types such as \texttt{int} or \texttt{float}.  An \textit{initial state} in Coq is a function that maps all variables to some default value.  States are modified using an update operator.  For example, the state \verb|s & { X --> 3; Y --> 1}| represents a state in which \texttt{s} is modified so that \texttt{X} has the value \texttt{3} and \texttt{Y} has the value \texttt{1}.  The ``\verb|s &|'' can be omitted if the update is to an initial state.
 
 Evaluation of commands can be viewed as a function from a command and a starting state to a new state.  It is encoded as a relation in Coq, and the notation \verb|c / s1 \\ s2| means that starting in state \texttt{s1} and executing \texttt{c} results in a new state \texttt{s2}.  We say that ``\texttt{c} takes \texttt{s1} to \texttt{s2}.''
-We omit the Coq definition of this relation.\footnote{AF: explain one case?  probably not because the examples later will be enough to illustrate}
+We omit the Coq definition of this relation.
 
 %, an interactive textbook on the mathematical foundations of reliable software, which is actually entirely a Coq script.
 
