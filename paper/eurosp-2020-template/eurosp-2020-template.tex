@@ -283,7 +283,7 @@ We omit the Coq definition of this relation.
 %\par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
 
 \subsection{Command Equivalence}\label{commequiv} 
-    For two commands (IMP programs) $c_1$ and $c_2$ to be equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq, we define \texttt{cequiv} as a predicate that takes two commands as arguments:
+    For two commands (IMP programs) $c_1$ and $c_2$ to be equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq, \texttt{cequiv}\cite{SFV2}  is defined as a predicate that takes two commands as arguments:
 \begin{verbatim}
 Definition cequiv (c1 c2 : com) : Prop 
   := forall (st st' : state), 
