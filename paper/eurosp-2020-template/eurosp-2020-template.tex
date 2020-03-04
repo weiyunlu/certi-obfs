@@ -336,7 +336,7 @@ In the Section \ref{naive}, we describe our initial (straightforward, naive) att
 
 However, we then discuss how this spawned two ideas in different directions that rectify the issue.  On the one hand, we use Hoare logic with this first formulation, in Section \ref{hoarequiv}, to prove weaker conditions\footnote{Bahman: this sentence doesn't read well. Amy could you review?} of a transformation than total command equivalence.  On the other hand, in Section \ref{noass} we reformulate the transformation to rely on values already existing in the state of the program, with the view that one may be applying an opaque predicate transformation to a small piece of code somewhere within a much larger program that would have such values floating around in the state already.
 
-Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation\footnote{Bahman: this is informal and makes sense but should we use proof object terminology? ``who does not have the proof for the opaque predicate''}, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
+Finally in Section \ref{weakened}, we again employ Hoare logic to give a formal example of how an attacker who does not know about the opaque predicate's constant truth valuation\footnote{Bahman: this is informal and makes sense but should we use proof object terminology? ``an attacker who does not have the proof for the opaque predicate''}, but otherwise can analyze (using static analysis) the program, ends up gaining weaker knowledge because of it.
 
 \subsection{Command Equivalence}\label{naive}
 \begin{defin}[Factorial program (countdown nonzero formulation)]\label{Fact}
@@ -363,7 +363,11 @@ fact_nonzero / { X --> 3 }
   Z --> 2; Y --> 6; Z --> 1 }.
 \end{verbatim}
 \end{example}
-    Note that formally, the final state holds the information of every intermediate assignment made by the program.  We can discern the output $Y=6$ by the fact that this is the rightmost case of a value being assigned to $Y$.  But wait, there's more!  We said earlier that in Coq, an example is no different from a proposition or a theorem in anything but name, so we must actually give a proof\footnote{This really is an example, to us.  But just because one declares ``here is an example of $X$" does not mean that $X$ is necessarily true.  In Coq, a proof must still be constructed.\par For example, in natural language, one can say ``An example of a prime number is 20051".  But this isn't immediately obvious, and one still needs to prove that example, for instance, by writing a program that tries to divide it by every number up to its square root.}.  Moreover, since command evaluation is relational and not functional (recall the reason for this is the possibility of non-terminating While loops), we must build the proof out step by step (see \cite{WeiRepo} for proofs).
+    Note that formally, the final state holds the information of every intermediate assignment made by the program.  We can discern the output $Y=6$ by the fact that this is the rightmost case of a value being assigned to $Y$. The named declaration (e.g. $factorial\_3$) specifies our expectations in the form of an assertion which can be verified by Coq given a proof (refer to \cite{WeiRepo} for a step by step proof). 
+    
+%    But wait, there's more!  We said earlier that in Coq, an example is no different from a proposition or a theorem in anything but name, so we must actually give a proof\footnote{This really is an example, to us.  But just because one declares ``here is an example of $X$" does not mean that $X$ is necessarily true.  In Coq, a proof must still be constructed.\par For example, in natural language, one can say ``An example of a prime number is 20051".  But this isn't immediately obvious, and one still needs to prove that example, for instance, by writing a program that tries to divide it by every number up to its square root.}.  
+%    
+    
 
 For this section, we'll use as a simple opaque predicate namely,
     \[
