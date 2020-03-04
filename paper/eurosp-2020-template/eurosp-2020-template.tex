@@ -386,13 +386,14 @@ Definition opaque_trans x c1 c2 :=
   Z'' ::= Z'' * Z'' ;;
   IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
 \end{verbatim}
-That is, the $opaque_trans$ function takes as input a number $x$ and programs $c_1$ and $c_2$, and returns the new program that executes $c_1$ if the equation
+That is, the $opaque\_trans$ function takes as input a number $x$ and programs $c_1$ and $c_2$, and returns the new program that executes $c_1$ if the equation
 \[
 	(x * x + x + x + 1) = (x + 1) * (x + 1)
 \]
 holds and executes $c_2$ otherwise.  Of course, the above is true for all $x$, so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by $opaque\_trans$ is equivalent to the original.
 
-\par The observant logically inclined reader should, at this point, now be suspicious about taking this claim at face value.  What do we mean when we say the transformed program should be ``the same''?  The next example, which shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example, elucidates the necessity to be precise.  First, however, we will need a few lemmas that show our opaque predicate is indeed such, in various incarnations to be used in proofs.
+\par What do we mean when we say the transformed program should be ``the same''?  Example \ref{firstfact} shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example.  First, however, let's state the fact that our opaque predicate is always true formally as lemma \ref{opaqueness} (refer to \cite{Weyun} for the proof).
+
 
 \begin{lemma}\label{opaqueness}
     It is indeed the case that 
@@ -433,9 +434,12 @@ THEN Z ::= X;;
 ELSE c2 FI
       \end{verbatim}
 \end{example}
+
+\par Although we did prove that our opaque predicate transformation worked (see \cite{WeiRepo} for the detailed proof), it seems there is no direct way to generalize example \ref{firstfact} in terms of command equivalency. Unfortunately, our transformation introduces new variables, which affects the value of the end state, even if those variables are not of interest to us. 
       
-\par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation) --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
-\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
+\par We cannot use $cequiv$ \eqref{commequiv} --- that is, we can't use it with the current formulation of the transformation --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
+\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}\footnote{Bahman: March 4th, Reviewed and fixed up to HERE}
+.
 
 \subsection{Hoare Logic Equivalence}\label{hoarequiv}
 
