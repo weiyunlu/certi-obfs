@@ -443,7 +443,8 @@ ELSE c2 FI
 
 \subsection{Hoare Logic Equivalence}\label{hoarequiv}
 
-In this section, we explore using Hoare logic to specify program conditions, and then generalize the result as much as we can.  The main idea with Hoare logic is that we can be more specific about what we wish a transformation to preserve (in our case, just the value of a single variable before the program runs and the value of a single variable after the program finishes, rather than the entire state as in the previous section).  First, we'll use a slightly different formulation of the factorial program.
+In this section, we explore using Hoare logic to specify program conditions, and then generalize the result as much as we can.  The main idea with Hoare logic is that we can be more specific about what we wish a transformation to preserve which it turns out is often good enough. %In the following, we wish to preserve the fact that the value of a single variable before the program runs and the value of a single variable after the program finishes. 
+First, we'll use a slightly different formulation of the factorial program.
 
 \begin{defin}[Factorial program (count-up formulation)]\index{factorial program!count-up formulation}
 This version of the factorial program counts up from zero rather than down from $X$, and works for input $0$ as well.
@@ -458,12 +459,7 @@ Definition fact_program : com :=
 \end{verbatim}
 \end{defin}
 
-We begin by restating Example \ref{firstoff}, replacing the specific values of $3$ and $6$ with arbitrary natural numbers, as the Hoare triple
-\[
-    (| X = x_0 |)\ fact\_program\ (| Y = x_0! |).
-\]
-
-We give definitions of the assertions on the values of $X$ and $Y$ in Coq as follows.
+We begin by definitions of the assertions on the values of $X$ and $Y$ in Coq as follows.
 
 \begin{verbatim}
 Definition as_x (x0 : nat) : Assertion 
@@ -472,8 +468,13 @@ Definition as_y (y0 : nat) : Assertion
    := (fun st => st Y = y0).
 \end{verbatim}
 
+Restating the Example \ref{firstoff}, replacing the specific values of $3$ and $6$ with arbitrary natural numbers, as the Hoare triple in the following example:
+%\[
+%    (| X = x_0 |)\ fact\_program\ (| Y = x_0! |).
+%\]
+
+
 \begin{example}\label{hoareexample1}
-    We are now ready to prove
     \[
      (|X=x_0|)\ fact\_program\ (|Y=x_0!|)
     \]
@@ -487,7 +488,7 @@ Example factorial_all_hoare:
   \end{verbatim}
 \end{example}
  
- We have proven that when $X = x_0$ before the (unobfuscated) \texttt{fact\_program} runs, then $Y = x_0!$ after the fact.  We now turn to showing that when we obfuscate $\texttt{fact\_program}$, it remains the case that $X = x_0$ beforehand implies $Y = x_0!$ when the program finishes.
+Example \ref{hoareexample1} states that when $X = x_0$ before the (unobfuscated) \texttt{fact\_program} runs, then $Y = x_0!$ afterward (see \cite{Weyun} for the full proof). We now turn to showing that when we obfuscate $\texttt{fact\_program}$, it remains the case that $X = x_0$ beforehand implies $Y = x_0!$ when the program finishes.
 
 \par
 
@@ -502,7 +503,7 @@ Definition opaque_trans' x c1 c2 :=
 \end{verbatim}
 
 \begin{example}\label{hoarel2}
-    We now prove the same Hoare triple holds with the obfuscated factorial program in place of the original program.
+    Next let's apply the transformation $opaque\_trans'$ to $fact\_program$. We want to show the same Hoare triple holds with the obfuscated factorial program in place of the original program (see \cite{Weyun} for the proof):
     \[
     \begin{array}{c}
     \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com, (|X=x_0|)\\ opaque\_trans'\ (X, fact\_program, c_2)\ (|Y=x_0!|)
@@ -519,10 +520,11 @@ forall x xo c2,
 \end{verbatim}
 \end{example}
 
-We've now successfully shown that our factorial program, both with and without the opaque predicate transformation, satisfies a Hoare triple of the form
+At this point, we've stated that our factorial program, both with and without the opaque predicate transformation, satisfies a Hoare triple of the form
 \[ (| X = x_0 |)\ c\ (| Y = y_0 |), \]
-and we would like to generalize\footnote{Our result is still rather specific; the only pre-condition we treat is that a specific variable $X$ takes on some value, and the only post-condition we treat is that a specific variable $Y$ takes on some value.  The pre- and post- conditions in Hoare logic could be more general, such as assertions that a variable isn't equal to some value, is greater than some value, or a conjunction or disjunction of several other statements.}.  Let's introduce a new term: \emph{Hoare fidelity}.
 
+We now would like to generalize\footnote{Our result is still rather specific; the only pre-condition we treat is that a specific variable $X$ takes on some value, and the only post-condition we treat is that a specific variable $Y$ takes on some value.  The pre- and post- conditions in Hoare logic could be more general, such as assertions that a variable isn't equal to some value, is greater than some value, or a conjunction or disjunction of several other statements.}.  Let's introduce a new term: \emph{Hoare fidelity}.
+\par
 \begin{defin}[Hoare fidelity (with respect to input X and output Y)]
 A program $c_2$ preserves the Hoare fidelity of a program $c_1$ with respect to input X and output Y, if the validity of the Hoare triple
 \[
@@ -540,7 +542,7 @@ Definition Hoare_fidelity_xy c1 c2
  hoare_triple (as_x xo) c2 (as_y yo).\end{verbatim}
 \end{defin}
 
-Indeed, the decision to use the factorial program in the previous examples for illustrative purposes was an unnecessary detail, so we replace it with an arbitrary program. See  \cite{Weyun} for proof of the theorem \ref{hoare_xy_main}.
+Indeed, the decision to use the factorial program in the previous examples for illustrative purposes was an unnecessary detail, so we replace it with an arbitrary program (see \cite{Weyun} for the proof): 
 
 \begin{theorem}\label{hoare_xy_main}
 For all programs $c_1$ and $c_2$, and all $x \in \mathbb{N}$, the transformed program $opaque\_trans'(x, c_1, c_2)$ preserves the Hoare fidelity with respect to input X and output Y of $c_1$.  
@@ -552,7 +554,7 @@ Theorem Opaque_trans_hoare_fidelity_xy:
 \end{verbatim}
 \end{theorem}
 
-Let's attempt to generalize this further\footnote{We've generalized to the point that the specific program no longer matters, but we are still requiring a specific subset of possible pre- and post-conditions.} now.
+Let's attempt to generalize this further using general pre- and post-conditions\footnote{We've generalized to the point that the specific program no longer matters, but we are still requiring a specific subset of possible pre- and post-conditions.}.
 
 \begin{defin}[Hoare fidelity (general)]
 A program $c_2$ preserves the Hoare fidelity of a program $c_1$ with respect to pre-condition $P$ and post-condition $Q$, if the validity of the Hoare triple
@@ -571,7 +573,7 @@ Definition Hoare_fidelity c1 c2 P Q :=
 \end{verbatim}
 \end{defin}
 
-We would like to generalize the theorem \ref{hoare_xy_main} even further and prove it for general pre-conditions $P$ and post-conditions $Q$ but we cannot. We will run into this exact same problem later in Section \ref{flattenif} and provide a solution there.  
+We would like to generalize the theorem \ref{hoare_xy_main} even further and prove it for general pre-conditions $P$ and post-conditions $Q$ but we cannot (we show where an attempt to prove the general case fails in \cite{Weyun}). We will run into this exact same problem later in Section \ref{flattenif} and provide a solution there.  
 
 \subsection{A Formulation without Assignment}\label{noass}
 In the first presentation of the opaque predicate transformation from Section \ref{naive}, we used a program that allowed
@@ -601,10 +603,10 @@ the program $c1$ is boolean equivalent to the program resulting from applying ma
 to $b$, $c1$, and $c2$. 
 \end{theorem}
 
-The power of proving a theorem to this level of generality is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the predicate supplied is indeed an opaque predicate.
+The power of the result stated in Theorem \ref{generalcequiv} (see the proof in \cite{Weyun}) is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the predicate supplied is indeed an opaque predicate. 
 
 \begin{example}\label{factopaqueex}
-We can now apply this theorem to our same running example of predicate and factorial program as before.
+We can now apply this theorem to our same running example of predicate and factorial program as before and show a general result (see \cite{Weyun} for the proof that verifies it).
 \begin{verbatim}
 Example example_fact_opaque_pred: 
  cequiv fact_nonzero 
@@ -616,13 +618,31 @@ Example example_fact_opaque_pred:
 \end{verbatim}
 \end{example}
 
+
 \subsection{Weakened Information Simulation}\label{weakened}
 
-We close this chapter with a series of examples that formally demonstrates the obfuscating effect of using an opaque predicate from the point of view of a simulated attacker.  We use Hoare Logic with the factorial program again, with input $X=3$, output $Y=6$, and with the $square\_program$ as the dummy program.
+We close this section with a series of examples that formally demonstrate the obfuscating effect of using an opaque predicate from the point of view of a simulated attacker.  We use Hoare Logic with the factorial program again, with input $X=3$, output $Y=6$, and with the $square\_program$ as the dummy program.
+
+\begin{verbatim}
+Definition square_program : com := 
+   Y ::= X * X.
+\end{verbatim}
 
 \begin{example}\label{hoare21}
     With the original factorial program, it is a straightforward application of the more general theorem already proven that the Hoare triple \[(|X=3|)\ fact\_program\ (|Y=6|)\] is valid.
 \end{example}
+
+
+\begin{verbatim}
+Definition trans_fact_square_program : 
+  com :=
+    (make_opaque_pred_IFB 
+      (make_opaque_pred 
+         ((X + 1) * (X + 1)) 
+          (X * X + X + X + 1)) 
+      fact_program 
+      square_program).
+\end{verbatim}
 
 \begin{example}\label{hoare22}
 With the transformed program, the analogous Hoare triple
@@ -631,7 +651,7 @@ is valid.
 \end{example}
 
 \begin{example}\label{hoare23}
-Now to simulate an attacker\footnote{This research is primarily focused on correctness rather than security models.  We're just assuming that we have an attacker performing static analysis on the code, and that he or she doesn't know the opaque predicate is always true or always false.  Under that assumption, we show that they obtain weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
+Now to simulate an attacker\footnote{This research is primarily focused on correctness rather than security goals.  We're just assuming that a static analysis is run on the code without the knowledge/proof regarding the validity of the opaque predicate.  Under that assumption, we show that the analysis obtains weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
 \[
 (|X=3|)\ trans\_fact\_program\ (|Y=6 \lor Y=9|).
 \]
