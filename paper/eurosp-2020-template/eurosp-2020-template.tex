@@ -629,8 +629,10 @@ Definition square_program : com :=
 \end{verbatim}
 
 \begin{example}\label{hoare21}
-    With the original factorial program, it is a straightforward application of the more general theorem already proven that the Hoare triple \[(|X=3|)\ fact\_program\ (|Y=6|)\] is valid.
+    With the original factorial program, it is a straightforward application of the more general theorem \ref{hoareexample1} that the Hoare triple \[(|X=3|)\ fact\_program\ (|Y=6|)\] is valid.
 \end{example}
+
+Next, we'll define an obfuscated program by using the transformations defined in the previous section:
 
 
 \begin{verbatim}
@@ -647,11 +649,11 @@ Definition trans_fact_square_program :
 \begin{example}\label{hoare22}
 With the transformed program, the analogous Hoare triple
 \[(|X=3|)\ trans\_fact\_square\_program\ (|Y=6|)\]
-is valid.
+is valid. It is noteworthy to point out that the proof (see \cite{Weyun}) uses the known fact that our opaque predicate indeed always evaluates to true!
 \end{example}
 
 \begin{example}\label{hoare23}
-Now to simulate an attacker\footnote{This research is primarily focused on correctness rather than security goals.  We're just assuming that a static analysis is run on the code without the knowledge/proof regarding the validity of the opaque predicate.  Under that assumption, we show that the analysis obtains weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
+Now to simulate an attacker\footnote{This research was primarily focused on correctness rather than security goals.  We're just assuming that a static analysis is run on the code without the knowledge/proof regarding the validity of the opaque predicate.  Under that assumption, we show that the analysis obtains weaker information than they otherwise would have.} who does not understand the opaque predicate, we show that the best information that can be gleamed is that the output is either $6$ or $9$; the proof (see \cite{Weyun}) must proceed through both the if-then and if-else branch, and the final post-condition weakened to the disjunction of the two possible outcomes, yielding the Hoare triple
 \[
 (|X=3|)\ trans\_fact\_program\ (|Y=6 \lor Y=9|).
 \]
