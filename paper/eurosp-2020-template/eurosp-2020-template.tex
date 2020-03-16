@@ -997,8 +997,27 @@ In closing, we stress, once more, that it \emph{is} important to actually apply 
 
 
 
-\begin{thebibliography}{00}
-\bibitem{WeiRepo} Weiyun Lu, ``GitHub repository to accompany the present research,'' \url{https://github.com/weiyunlu/coq-certified-obfuscation}, 2019
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{#1}
+\csname url@samestyle\endcsname
+\providecommand{\newblock}{\relax}
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
+\providecommand{\BIBentryALTinterwordstretchfactor}{4}
+\providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
+  \fontdimen4\font\relax}
+\providecommand{\BIBforeignlanguage}[2]{{%
+\expandafter\ifx\csname l@#1\endcsname\relax
+\typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
+\typeout{** loaded for the language `#1'. Using the pattern for}%
+\typeout{** the default language instead.}%
+\else
+\language=\csname l@#1\endcsname
+\fi
+#2}}
+\providecommand{\BIBdecl}{\relax}
+\BIBdecl
 
 \bibitem{Floyd}
 R.~W. Floyd, ``Assigning meanings to programs,'' in \emph{Program
@@ -1082,6 +1101,7 @@ S.~Blazy and R.~Hutin, ``Formal verification of a program obfuscation based on
   mixed boolean-arithmetic expressions,'' in \emph{Proceedings of the 8th ACM
   SIGPLAN International Conference on Certified Programs and Proofs}, 2019, pp.
   196--208.
+
 \end{thebibliography}
 
 %\bibliographystyle{IEEEtran}
