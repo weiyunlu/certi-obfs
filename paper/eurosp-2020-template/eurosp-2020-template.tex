@@ -95,20 +95,6 @@ obfuscation, verification, security, correctness, Coq, proof
 \section{Introduction}
 We expect our software systems to function correctly. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations, i.e., its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in the correct functionality of a piece of software.
 
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.27]{ifElse}
-\caption{If-Then-Else}
- \label{fig:ifElse}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.27]{ifElseFlat}
-\caption{Flattened If-Then-Else}
- \label{fig:flatIfElse}
-\end{figure}
-
 %but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. 
 %I don't think it is correct to say inductive reasoning.  Most of our reasoning is Coq is by induction.  So, I changed the wording.
 \par The more testing that is done, the more confidence one has of the likelihood of correctness, but positive testing results are not a proof of correctness.
@@ -278,6 +264,7 @@ For more details on IMP, the reader is referred to \cite{SFV2}.
 %We now give the necessary definitions and theorems from Software Foundations \cite{SFV2}.\footnote{AF: As Wei mentioned, we don't define IMP, but I think we need to in order for the reader to understand the rest of the paper.  We need to define \texttt{com} and \texttt{state} along with all of the notation we use for them (e.g., so that the reader can understand any of the programs like fact\_nonzero).  We need to define the evaluation and the notation used for it (e.g., c / st backslash st').  As well as any other basic definitions and notations used in what is now Section 3.}
 
 \subsection{Syntax and Semantics of IMP}
+\label{sec:syntaxsemantics}
 Informally, IMP commands are defined by the following BNF grammar:
 \texttt{c ::= SKIP | x ::= a | c ;; c | IFB b THEN c ELSE c FI | WHILE b DO c END}.
 In~\cite{SFV2}, this grammar is encoded by defining a new type called \texttt{com} and new keywords (called \emph{constructors} in Coq), one for each element of the grammar, and then defining notation that maps this formal definition to the BNF syntax.  For example, the definition of \texttt{com} includes the following case for assignment statements: \texttt{CAss (x : string) (a : aexp)}, which introduces the \texttt{CAss} constructor and specifies its two arguments along with their types.  A variable is represented using the built-in \texttt{string} type in Coq, the arithmetic expression on the right of an assignment command has type \texttt{aexp}, and the notation specifies that Coq terms of the form \texttt{(CAss x a)} will be written \texttt{x := a}.
@@ -709,142 +696,212 @@ Today's reverse engineering tools and/or other static analysis tools can at a gl
 
 %Furthermore \emph{symbolic execution} engines and SMT solvers are increasingly used to figure out the ``fake'' control flows and eliminate them from the view. 
 
-One of the obfuscation techniques to make this difficult to analyze is \emph{control flow flattening}. This technique aims to break apart all of the constructs that would reveal information about a program's control flow and flatten an entire program into a single semantically equivalent switch statement inside a while loop.
-
-For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}.  
-
-\subsection{Flattening an If-Then-Else Construct}
-For the first half of this section, we will focus on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (see listing \ref{lst:beforeflatten} which is adapted from \cite{Blazy2}):
-
-\begin{listing}
+One of the obfuscation techniques to make this difficult to analyze is \emph{control flow flattening}. This technique aims to break apart all of the constructs that would reveal information about a program's control flow and flatten an entire program into a single semantically equivalent switch statement inside a while loop.  
+In this section (subsections \ref{4.2} and \ref{4.3}), we focus on a single transformation that turns an If-Then-Else construct of the form in Figure~\ref{fig:ifElse}
+%
+\begin{figure}[hbt]
+\centering
+\includegraphics[scale=0.27]{ifElse}
 \caption{If-Then-Else}
-\label{lst:beforeflatten}
-\begin{minted}
-[
-frame=single,
-framesep=2mm,
-baselinestretch=1.2,
-fontsize=\footnotesize
-] {c}
-int i;
-i = 0; // Header
-if (i < 100) 
-{
-  i++;
-}
-else
-{
-  i = 9;
-}
-// Footer
-\end{minted}
-\end{listing}
-
-\begin{listing}
+ \label{fig:ifElse}
+\end{figure}
+to the equivalent flattened program illustrated in Figure~\ref{fig:flatIfElse}.
+\begin{figure}[hbt]
+\centering
+\includegraphics[scale=0.27]{ifElseFlat}
 \caption{Flattened If-Then-Else}
-\label{lst:afterflatten}
-\begin{minted}
-[
-frame=single,
-framesep=2mm,
-baselinestretch=1.2,
-fontsize=\footnotesize
-] {c}
-int i;
-int swVar;
-swVar = 0;
-while (swVar <= 4) {
-  switch (swVar) {
-    case 0:
-      i = 0; // Header
-      swVar = 1;
-    case 1:
-      if (i < 100) {
-        swVar = 2;
-        break;
-      } else {
-        swVar = 3;
-        break;
-      }
-    case 2:
-      i++; swVar = 4;
-      break;
-    case 3:
-      i = 9; swVar = 4;
-      break;
-    case 4:
-      // Footer
-      swVar = 5;
-      break;
-  }
-}
-\end{minted}
-\end{listing}
+ \label{fig:flatIfElse}
+\end{figure}
+%
+
+In Section~\ref{4.4}, we briefly discuss other transformations that we have defined and proven correct but do not have space to provide details for.
+For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}. 
+
+%\subsection{Flattening an If-Then-Else Construct}
+%For the first half of this section, we will focus on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (see listing \ref{lst:beforeflatten} which is adapted from \cite{Blazy2}):
+
+%\begin{listing}
+%\caption{If-Then-Else}
+%\label{lst:beforeflatten}
+%[
+%frame=single,
+%framesep=2mm,
+%baselinestretch=1.2,
+%fontsize=\footnotesize
+%] {c}
+%int i;
+%i = 0; // Header
+%if (i < 100) 
+%{
+%  i++;
+%}
+%else
+%{
+%  i = 9;
+%}
+%// Footer
+%\end{minted}
+%\end{listing}
+
+%begin{listing}
+%\caption{Flattened If-Then-Else}
+%\label{lst:afterflatten}
+%\begin{minted}
+%[
+%frame=single,
+%framesep=2mm,
+%baselinestretch=1.2,
+%fontsize=\footnotesize
+%] {c}
+%int i;
+%int swVar;
+%swVar = 0;
+%while (swVar <= 4) {
+%  switch (swVar) {
+%    case 0:
+%      i = 0; // Header
+%      swVar = 1;
+%    case 1:
+%      if (i < 100) {
+%        swVar = 2;
+%        break;
+%      } else {
+%        swVar = 3;
+%        break;
+%      }
+%    case 2:
+%      i++; swVar = 4;
+%      break;
+%    case 3:
+%      i = 9; swVar = 4;
+%      break;
+%    case 4:
+%      // Footer
+%      swVar = 5;
+%      break;
+%  }
+%}
+%\end{minted}
+%\end{listing}
 
 
-We will, in Section \ref{4.2}, first add the syntax and semantics\footnote{Phil: Do we need the syntax and semantics?  Amy: Thedefinition of \texttt{com} was originally left out entirely from IMP without Switch in the earlier sections, so it doesn't make sense to add it here.  In Section 2, I added a description and notation of \texttt{com}.  This section needs to be updated to do the same.} of Switch statements to the IMP language.  Then in Section \ref{4.3} we formalize the above transformation, define what it means for it to be correct, realize some additional conditions are required and formulate what those are, and then finally prove it so.
+%We will, in Section \ref{4.2}, first add the syntax and semantics\footnote{Phil: Do we need the syntax and semantics?  Amy: Thedefinition of \texttt{com} was originally left out entirely from IMP without Switch in the earlier sections, so it doesn't make sense to add it here.  In Section 2, I added a description and notation of \texttt{com}.  This section needs to be updated to do the same.} of Switch statements to the IMP language.  Then in Section \ref{4.3} we formalize the above transformation, define what it means for it to be correct, realize some additional conditions are required and formulate what those are, and then finally prove it so.
 
 
 \subsection{Augmenting IMP with Switch (IMP+Switch)}\label{4.2}
-Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements, which we'll call the \emph{IMP+Switch} language.  We'll also define a new type, $address$, which is just a wrapper for a $nat$ and a type $lc$ (list of commands) which is a list of possible switch branches indexed by $address$, and then redefine the type $com$ to support switch statements.
+%Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements, which we'll call the \emph{IMP+Switch} language.  We'll also define a new type, $address$, which is just a wrapper for a $nat$ and a type $lc$ (list of commands) which is a list of possible switch branches indexed by $address$, and then redefine the type $com$ to support switch statements.
+%
+%\begin{verbatim}
+%Definition address := nat.
+%Definition lc := list (address * com).
+%\end{verbatim}
 
-\begin{verbatim}
-Definition address := nat.
-Definition lc := list (address * com).
-\end{verbatim}
+%\begin{verbatim}
+%Inductive com : Type :=
+%  ...
+%  | CSwitch : 
+%    string -> 
+%      list (address * com) -> com.
+%\end{verbatim}
 
-\begin{verbatim}
-Inductive com : Type :=
-  ...
-  | CSwitch : 
-    string -> 
-      list (address * com) -> com.
-\end{verbatim}
+%Next, we create a function to search a $lc$ by address.
+%\begin{verbatim}
+%Fixpoint lc_lookup 
+%  (tlc: lc) (adr: address): 
+%     option com := ... 
+%\end{verbatim}
+%
+%We'll also define a new type, $address$, which is just a wrapper for a $nat$ and a type $lc$ (list of commands) which is a list of possible switch branches indexed by $address$, and then redefine the type $com$ to support switch statements.
+%
+%We accordingly redefine the command evaluation semantics to include switch statements.
+%
+Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements. We extend the original IMP language from~\cite{SFV2} and add the clause \texttt{| SWITCH v l} to the BNF grammar presented in Section~\ref{sec:syntaxsemantics}.  Here \texttt{v} is the name of the switch variable (which is $s$ in Figure~\ref{fig:flatIfElse}), represented as a Coq \texttt{string}.  The second argument \texttt{l} is a list of pairs (represented using Coq's built-in types for lists and pairs), where the first element of each pair is a \texttt{nat}, representing the case number in the switch statement, and the second element is a \texttt{com} representing the program associated with that number.
+We accordingly redefine the command evaluation semantics (the definition of \verb|c / s1 \\ s2|) to include evaluation of switch statements.  In addition, we extend the proof in~\cite{SFV2} to show that evaluation is still deterministic with our new switch statements.
 
-Next, we create a function to search a $lc$ by address.
-\begin{verbatim}
-Fixpoint lc_lookup 
-  (tlc: lc) (adr: address): 
-     option com := ... 
-\end{verbatim}
+%The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weiyun} for details).\footnote{Phil: Are these ever explained below?  Amy: No, must be modified.}
 
-We accordingly redefine the command evaluation semantics to include switch statements.
-
-The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weiyun} for details).\footnote{Phil: Are these ever explained below?  Amy: No, must be modified.}
-
-\begin{theorem}\label{deterministic}\index{deterministic}
-Command evaluation is deterministic, in the sense that if a command evaluates a state $st$ to a state $st1$, but also to some (possibly) other state $st2$, then it must be the case that $st1 = st2$.  In Coq,
-\begin{verbatim}
-Theorem ceval_deterministic: 
-  forall c st st1 st2,
-   c / st \\ st1 -> 
-   c / st \\ st2 -> 
-         st1 = st2.
-\end{verbatim}
-\end{theorem}
+%\begin{theorem}\label{deterministic}\index{deterministic}
+%Command evaluation is deterministic, in the sense that if a command evaluates a state $st$ to a state $st1$, but %also to some (possibly) other state $st2$, then it must be the case that $st1 = st2$.  In Coq,
+%\begin{verbatim}
+%Theorem ceval_deterministic: 
+%  forall c st st1 st2,
+%   c / st \\ st1 -> 
+%   c / st \\ st2 -> 
+%         st1 = st2.
+%\end{verbatim}
+%\end{theorem}
 
 \subsection{Flattening If-Then-Else in IMP+Switch}\label{flattenif}\label{4.3}
 
-\begin{defin}
-We build an If-Then-Else statement to be flattened by the following function in Coq. The $header$ and $footer$ parameters are simply any IMP commands that occur before and after, respectively, the If-Then-Else statement. Since we wish to prove command equivalence between the original and transformed programs, we note that $swVar$ is introduced with value $0$ and ends with value $5$ in the transformed program; hence, we'll preprocess the original program to be transformed by adding in these assignments.
- 
-\begin{verbatim}
-Definition 
-  preprocess_program 
-    header cond c1 c2 footer: 
-      com := ... 
- \end{verbatim}
-\end{defin}
+We wish to prove command equivalence between the original and transformed programs. We note that the switch variable $s$ is introduced in Figure~\ref{fig:flatIfElse} with value $0$ and ends with value $5$.  Hence, we need to preprocess the original program to be transformed by adding in these assignments.  We define two functions in Coq, one for preprocessing and one to transform the If-Then-Else statement into a switch statement.  
+%We then prove that the two programs are equivalent using a new definition called \emph{evaluation invariance}.  
+Both functions take a boolean condition, and two subprograms for the if-then and if-else branches.  They also take a header and footer, which are subprograms that are executed before and after the If-Then-Else statement, respectively.  These functions appear in Listings~\ref{listing:preprocess} and~\ref{listing:flatten}.
+\begin{listing}
+\caption{The \texttt{preprocess\_program} function}
+\label{listing:preprocess}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+Definition preprocess_program
+  header cond c1 c2 footer : com :=
+  swVar ::= 0 ;;
+  header ;;
+  IFB cond THEN c1 ELSE c2 FI ;;
+  footer ;;
+  swVar ::= 5.
+\end{minted}
+\end{listing}
+%
+\begin{listing}
+\caption{The \texttt{transform\_program} function}
+\label{listing:flatten}
+\begin{minted}
+[
+frame=single,
+framesep=2mm,
+baselinestretch=1.2,
+fontsize=\footnotesize
+] {c}
+Definition transform_program
+  header cond c1 c2 footer : com :=
+  swVar ::= 0 ;;
+  WHILE (swVar <= 4) DO
+    SWITCH swVar [
+      (0, header ;; swVar ::= 1) ;
+      (1, IFB cond THEN swVar ::= 2
+          ELSE swVar ::= 3 FI) ;
+      (2, c1 ;; swVar ::= 4) ;
+      (3, c2 ;; swVar ::= 4) ;
+      (4, footer ;; swVar ::= 5) ]
+  END.
+\end{minted}
+\end{listing}
+The difference is that the first function forms a regular If-Then-Else statement, and the second one forms the flattened version. From the components of the original program, it builds a switch statement wrapped in a while loop, with the cases appropriately handled.
 
-\begin{defin}
-Transforming a program with control flow flattening on an If-Then-Else statement takes the If-Then-Else components and builds a `switch' wrapped in a `while' with `cases' appropriately handled.
-\begin{verbatim}
-Definition 
-   transform_program 
-     header cond c1 c2 footer: 
-       com := ...
-\end{verbatim}
-\end{defin}
+%\begin{defin}
+%We build an If-Then-Else statement to be flattened by the following function in Coq. The $header$ and %$footer$ parameters are simply any IMP commands that occur before and after, respectively, the %If-Then-Else statement. Since we wish to prove command equivalence between the original and transformed %programs, we note that $swVar$ is introduced with value $0$ and ends with value $5$ in the transformed %program; hence, we'll preprocess the original program to be transformed by adding in these assignments.
+% 
+%\begin{verbatim}
+%Definition 
+%  preprocess_program 
+%    header cond c1 c2 footer: 
+%      com := ... 
+% \end{verbatim}
+%\end{defin}
+%
+%\begin{defin}
+%Transforming a program with control flow flattening on an If-Then-Else statement takes the If-Then-Else %components and builds a `switch' wrapped in a `while' with `cases' appropriately handled.
+%\begin{verbatim}
+%Definition 
+%   transform_program 
+%     header cond c1 c2 footer: 
+%       com := ...
+%\end{verbatim}
+%\end{defin}
 
 %\begin{defin}[WorldEater program]
 %We'll use a minimal example program for this section, which we call \emph{WorldEater}, a %program that does nothing if the variable $X$ is zero, and assigns $X=1$ otherwise.
@@ -890,7 +947,7 @@ Definition
 %The proof (see \cite{Weiyun} for details) follows the same structure and ideas as the more %general Theorem \ref{maintheo} to come.
 %\end{example}
 
-We now wish state a general theorem that all programs' preprocessed and transformed forms are command equivalent. However the fact that we haven't fully accounted for the newly introduced $swVar$ which controls the switch statement is problematic. If the original program already uses this variable in some way, then everything could break.
+Before we state the general theorem that any program's preprocessed and transformed forms are command equivalent, we have to fully accounted for the newly introduced switch variable which controls the switch statement, called $swVar$ in Listings~\ref{listing:preprocess} and~\ref{listing:flatten}. If the original program already uses this variable in some way, then command equivalence will not necessarily hold.
 
 \begin{defin}[Evaluation invariance]
 A program $c$ is \emph{evaluation invariant} with respect to a variable $X$ if, for all states $st$ and $st'$ and all $n \in \mathbb{N}$, $c$ evaluates $st$ to $st'$ if and only if $c$ evaluates $st$ updated with $(X \longrightarrow n)$ to $st'$ updated with $(X\longrightarrow n)$.
