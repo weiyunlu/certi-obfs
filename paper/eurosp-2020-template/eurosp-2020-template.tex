@@ -27,6 +27,9 @@
 % take this out for final version
 \pagestyle{plain}
 
+\usepackage{graphicx}
+% \graphicspath{ {/Users/bahman.sistany/bahman_mac/imp} }
+
 \begin{document}
 
 \title{Towards Formal Verification of Program Obfuscation}
@@ -91,9 +94,24 @@ obfuscation, verification, security, correctness, Coq, proof
 
 \section{Introduction}
 We expect our software systems to function correctly. By ``correctly'', we mean that a system will behave according to explicit and/or implicit expectations, i.e., its written and/or unwritten specifications. Typically, extensive testing is done to increase the confidence in the correct functionality of a piece of software.
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.27]{ifElse}
+\caption{If-Then-Else}
+ \label{fig:ifElse}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.27]{ifElseFlat}
+\caption{Flattened If-Then-Else}
+ \label{fig:flatIfElse}
+\end{figure}
+
 %but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. 
 %I don't think it is correct to say inductive reasoning.  Most of our reasoning is Coq is by induction.  So, I changed the wording.
-The more testing that is done, the more confidence one has of the likelihood of correctness, but positive testing results are not a proof of correctness.
+\par The more testing that is done, the more confidence one has of the likelihood of correctness, but positive testing results are not a proof of correctness.
 In systems where more assurance of correctness is required, various types of deductive reasoning are often used, where formal verification methods based on theoretical foundations rooted in logic are employed. This is the approach that we adopt here.  It is important to note that formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness.  Thus, it is not a silver bullet; however, since specifications are often smaller and less complex to express, we are able to successfully reduce the trusted computing base (TCB) and increase our chances of achieving correctness.
 
 %Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don't hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
