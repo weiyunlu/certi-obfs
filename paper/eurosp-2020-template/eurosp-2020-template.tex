@@ -114,7 +114,7 @@ To achieve the highest level of assurance that a transformation has maintained c
 Equivalence between two versions of a program certainly implies the correctness of any program properties of interest proved for one version applies to the other.  Alternatively, what if we limit ourselves to only proving properties of interest in the ``before'' version of a program, and show that these properties are maintained in the ``after'' version of the program after a particular transformation is applied? 
 %
 %Certain simple transformations simply don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
-Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in listing [\ref{lst:before}], which asserts that $y > 2$ and is easily verified visually. The snippet in listing [\ref{lst:after}] illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable $x$ into two  variables $x1$ and $x2$, and it is clear (visually) that the assertion $y > 2$ still holds.
+Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in listing \ref{lst:before}, which asserts that $y > 2$ and is easily verified visually. The snippet in listing \ref{lst:after} illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable $x$ into two  variables $x1$ and $x2$, and it is clear (visually) that the assertion $y > 2$ still holds.
 
 
 \begin{listing}
@@ -1020,17 +1020,21 @@ Theorem AllTransEquiv:
 \end{verbatim}
 \end{theorem}
 \emph{Proof Sketch.}
-Proving command equivalence in this case requires proving that for all states \texttt{st} and \texttt{st'}, both \verb|p1 / st \\ st' -> p2 / st \\ st'| and \verb|p2 / st \\ st' -> p1 / st \\ st'|.  Each case has two subcases depending on whether \texttt{cond} is true or false.  We discuss only the first case, with the subcase where \texttt{cond} is true.  In the Coq proof, we work in the backward direction, starting with the statement of the theorem and breaking it down into subgoals step-by-step by applying tactics.  After numerous steps, the subcase of interest is expressed as the Coq goal in Listing~\ref{listing:proof}.
-\begin{listing}
-\caption{The \texttt{transform\_program} function}
-\label{listing:proof}
-\begin{minted}
-[
-frame=single,
-framesep=2mm,
-baselinestretch=1.2,
-fontsize=\footnotesize
-] {c}
+Proving command equivalence in this case requires proving that for all states \texttt{st} and \texttt{st'}, both \verb|p1 / st \\ st' -> p2 / st \\ st'| and \verb|p2 / st \\ st' -> p1 / st \\ st'|.  Each case has two subcases depending on whether \texttt{cond} is true or false.  We discuss only the first case, with the subcase where \texttt{cond} is true.  In the Coq proof, we work in the backward direction, starting with the statement of the theorem and breaking it down into subgoals step-by-step by applying tactics.  After numerous steps, the subcase of interest is expressed as the Coq goal in Figure~\ref{comequiproof}.
+
+%\begin{listing}
+%\caption{The \texttt{transform\_program} function}
+%\label{listing:proof}
+%\begin{minted}
+%[
+%frame=single,
+%framesep=2mm,
+%baselinestretch=1.2,
+%fontsize=\footnotesize,
+%escapeinside=??
+%] {c}
+\begin{figure}
+\begin{verbatim}
   cond : bexp
   header, c1, c2, footer : com
   st, st', s0, s1, s2, s3 : state
@@ -1038,9 +1042,11 @@ fontsize=\footnotesize
   HI2 : eval_invariant c2 swVar
   HIf : eval_invariant footer swVar
   HB : beval_invariant cond swVar
-  H2 : (swVar ::= 0) / st \\ s0
+  H2 : (swVar ::= 0) / st ?\\? s0
   H3 : header / s0 \\ s1
-  H4 : (IFB cond THEN c1 ELSE c2 FI) / s1 \\ s2
+  H4 : 
+    (IFB cond THEN c1 ELSE c2 FI) 
+    / s1 \\ s2
   H6 : footer / s2 \\ s3
   H11 : (swVar ::= 5) / s3 \\ st'
   A0 : aeval s0 swVar = 0
@@ -1057,8 +1063,11 @@ fontsize=\footnotesize
        (3, c2;; swVar ::= 4);
        (4, footer;; swVar ::= 5)]
    END) / st \\ st'
-\end{minted}
-\end{listing}
+\end{verbatim}
+\caption{Command equivalence proof}
+    \label{comequiproof}
+\end{figure}
+
 The formulas above the double line are the current hypotheses, while the statement to be proven is below the line.  Many of the hypotheses come from breaking down the program \texttt{p1} into single statements, which come from the definition of the evaluation relation.  Here, this relation defines the operational semantics of IMP+Switch.  For example, \texttt{H2} expresses that the assignment statement \texttt{swVar ::= 0} is evaluated in the start state \texttt{st} resulting in the intermediate state \texttt{s0}, while \texttt{H3} expresses that evaluating the header starting from this intermediate state results in a new intermediate state \texttt{s1}.  The last 3 hypotheses state some facts about the values of \texttt{swVar} in the start and end states and show the value of \texttt{cond} for this subcase. To prove the conclusion, the definition of evaluation is again important, along with the fact that this evaluation relation is deterministic.
 
 
