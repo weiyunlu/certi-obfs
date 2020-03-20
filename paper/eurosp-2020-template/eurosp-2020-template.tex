@@ -1,6 +1,6 @@
 \documentclass[compsoc,conference,a4paper,10pt,times]{IEEEtran}
 % \IEEEoverridecommandlockouts
-% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.   
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
@@ -1064,36 +1064,39 @@ Proving command equivalence in this case requires proving that for all states \t
        (4, footer;; swVar ::= 5)]
    END) / st \\ st'
 \end{verbatim}
-\caption{Command equivalence proof}
+\caption{Command equivalence proof step}
     \label{comequiproof}
 \end{figure}
 
-The formulas above the double line are the current hypotheses, while the statement to be proven is below the line.  Many of the hypotheses come from breaking down the program \texttt{p1} into single statements, which come from the definition of the evaluation relation.  Here, this relation defines the operational semantics of IMP+Switch.  For example, \texttt{H2} expresses that the assignment statement \texttt{swVar ::= 0} is evaluated in the start state \texttt{st} resulting in the intermediate state \texttt{s0}, while \texttt{H3} expresses that evaluating the header starting from this intermediate state results in a new intermediate state \texttt{s1}.  The last 3 hypotheses state some facts about the values of \texttt{swVar} in the start and end states and show the value of \texttt{cond} for this subcase. To prove the conclusion, the definition of evaluation is again important, along with the fact that this evaluation relation is deterministic.
+The formulas above the double line are the current hypotheses, while the statement to be proven is below the line. Many of the hypotheses come from breaking down the program \texttt{p1} into evaluation steps for single statements. They come from the definition of the evaluation relation, which as discussed, defines the operational semantics of IMP+Switch.  For example, \texttt{H2} expresses that the assignment statement \texttt{swVar ::= 0} is evaluated in the start state \texttt{st} resulting in the intermediate state \texttt{s0}, while \texttt{H3} expresses that evaluating the header starting from the intermediate state \texttt{s0} results in a new intermediate state \texttt{s1}.  The last 3 hypotheses state some facts about the values of \texttt{swVar} in the start and end states and show the value of \texttt{cond} for this subcase. To prove the conclusion, the definition of evaluation is again important, along with the fact that the evaluation relation is deterministic.
 
 
-\subsection{Flattening a While-Do-End Construct}\label{4.4}
-We now switch gears and study (as well as formalize) an example of dismantling and then flattening a While-Do-End construct described in \cite{Wang}
+\subsection{Transforming a While-Do-End Construct}\label{4.4}
+We now switch gears and briefly discuss \emph{dismantling} and then \emph{flattening} a While-Do-End construct, focusing on an example described in \cite{Wang}.
+For this particular transformation, we start with a program with a While-Do-End construct, and dismantle it into a number of basic blocks (where each block is sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  During execution, the targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
+Dismantling is then followed by a flattening operation, reminiscent of the flattening transformation above.
+%In keeping consistent with prior terminology, this transformation will be called flattening.  We'll develop a different language in the next section, however, and model this a bit differently from the switch statements of Sections \ref{4.2} and \ref{4.3}, as we need to consider basic blocks as first class citizens.
 
-Starting with a program with a While-Do-End construct, it is \emph{dismantled} into a number of basic blocks (sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  The targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
+%\subsection{Wrapping IMP in a Flowchart Language (IMP+Flow)}\index{IMP+Flow}
 
-The next level of the transformation is reminiscent of the transformation studied in the first half of this chapter, wherein these GoTos are replaced by entry into a switch statement.  In keeping consistent with prior terminology, this transformation will be called flattening.  We'll develop a different language in the next section, however, and model this a bit differently from the switch statements of Sections \ref{4.2} and \ref{4.3}, as we need to consider basic blocks as first class citizens.
+%In this section,\footnote{AF: Address Phil's comments about flowchart languages, maybe by adding a reference to the Software Foundations book, where it is used there.} we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart\footnote{Note that our formulation for \emph{flowchart} is different from \cite{SFV2}}. We also define evaluation relations for basic blocks and programs of basic blocks (see \cite{Weiyun} for details).
 
-\subsection{Wrapping IMP in a Flowchart Language (IMP+Flow)}\index{IMP+Flow}
+%This language is similar to intermediate languages that are transpiled to and used in the commercial obfuscation tools such as Cloakware's obfuscation engine \cite{Cloakware}. While very cumbersome to actually write programs in, it is well-suited to control flow related algorithms due to its treatment of basic blocks (of code) as first-class citizens.
 
-In this section,\footnote{AF: Address Phil's comments about flowchart languages, maybe by adding a reference to the Software Foundations book, where it is used there.} we describe a new lower-level formal language which will be used to represent the example from the previous section.  We'll call this language \emph{IMP+Flow}, short for flowchart\footnote{Note that our formulation for \emph{flowchart} is different from \cite{SFV2}}. We also define evaluation relations for basic blocks and programs of basic blocks (see \cite{Weiyun} for details).
+%Note here that the underlying program is the original IMP, and not the IMP+Switch defined in Section \ref{4.2}.  We handle switch statements differently here, by defining them as a type of block.
 
-This language is similar to intermediate languages that are transpiled to and used in the commercial obfuscation tools such as Cloakware's obfuscation engine \cite{Cloakware}. While very cumbersome to actually write programs in, it is well-suited to control flow related algorithms due to its treatment of basic blocks (of code) as first-class citizens.
+For this transformation, we modify IMP once again.  This time, we replace the switch command of the previous section with a lower-level language (which we call IMP+Flow since it explicitly deals with flow of control constructs like jumps) containing basic blocks, with a switch statement as one of the kinds of blocks.
+This language is similar to intermediate languages into which higher-level programs are transpiled, and which are used in commercial obfuscation tools such as Cloakware's obfuscation engine \cite{Cloakware}.
 
-Note here that the underlying program is the original IMP, and not the IMP+Switch defined in Section \ref{4.2}.  We handle switch statements differently here, by defining them as a type of block.
+In Coq, we introduce a new type called \texttt{comBlock}, which encodes the following grammar: 
+\texttt{bJump c l | bCond c b l l | bSwitch c v m | bEnd c}. 
+Each kind of block consists of a command together with an instruction of how to find the next block.
+They include 1) an unconditional jump where the next block is denoted by a label \texttt{l} represented as a Coq string, 2) a conditional jump, where \texttt{b} is a \texttt{bexp} and the two labels indicate where to jump in the true and false cases, 3) a switch command, with switch variable \texttt{v} and mapping \texttt{m}, which maps values of the switch variable to labels, and 4) a terminal block.  A program is then a pair consisting of an initial command block and a \emph{block dictionary}, which maps labels to command blocks.  We must also extend the definition of the evaluation relation to command blocks.  (We omit the details. As usual, see \cite{Weiyun,WeiRepo}.)
 
-\subsection{Flattening While-Do-End in IMP+Flow}
+%\subsection{Flattening While-Do-End in IMP+Flow}
 
-Starting with an example program in IMP proper:
-
-\begin{defin}
-    
-    \begin{verbatim}
-Definition OriginalCommand : com :=
+We illustrate this notion of dismantling and flattening with the example mentioned earlier.  The original program is a single block containing the IMP program below:
+\begin{verbatim}
   WHILE (A <= 2) DO
     B ::= A + B ;;
     IFB (!(B <= 4)) THEN
@@ -1102,11 +1105,19 @@ Definition OriginalCommand : com :=
     A ::= A + 1
   END ;;
   RETURN ::= A * B.
-  \end{verbatim}
-  \end{defin}
-
-We transform\footnote{Phil:Too compressed.  Maybe put the details into an appendix.} it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$ (see \cite{Weiyun} for details).
-
+\end{verbatim}
+We do not describe the transformation any further, but just note that the transformed program contains the following blocks, and execution starts at block \texttt{L1}.
+\begin{verbatim}
+"L1" --> bConditional SKIP
+         (! (A <= 2)) "L4" "L3";
+"L2" --> bJump (A ::= A + 1) "L1";
+"L3" --> bConditional (B ::= A + B)
+         (B <= 4) "L2" "L5";
+"L4" --> bEnd (RETURN ::= A * B); 
+"L5" --> bJump (B ::= B - 1) "L2"
+\end{verbatim}
+ %We transform\footnote{Phil:Too compressed.  Maybe put the details into an appendix.} it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$ (see \cite{Weiyun} for details).
+As an example, we have proved that both versions of the program, when starting in a state with $A = 1$ and $B = 2$, evaluate to the same final state with $RETURN = 12$. 
 
 
 \section{Obfuscation in Coq: Related Work}
@@ -1149,122 +1160,8 @@ have, in the formal setting of Coq, only tackled one desired property of obfusca
 
 In closing, we stress, once more, that it \emph{is} important to actually apply formal specifications and methods to security goals and metrics in some form, so we can come full circle and give prospective clients of an obfuscation tool a clear answer to the \emph{other} big question ``How exactly will using this improve the security of my programs?" and be able to back our answer with a proof that it actually does so.
 
+%\input{oldbib}
 
-
-\begin{thebibliography}{10}
-\providecommand{\url}[1]{#1}
-\csname url@samestyle\endcsname
-\providecommand{\newblock}{\relax}
-\providecommand{\bibinfo}[2]{#2}
-\providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
-\providecommand{\BIBentryALTinterwordstretchfactor}{4}
-\providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
-  \fontdimen4\font\relax}
-\providecommand{\BIBforeignlanguage}[2]{{%
-\expandafter\ifx\csname l@#1\endcsname\relax
-\typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
-\typeout{** loaded for the language `#1'. Using the pattern for}%
-\typeout{** the default language instead.}%
-\else
-\language=\csname l@#1\endcsname
-\fi
-#2}}
-\providecommand{\BIBdecl}{\relax}
-\BIBdecl
-
-\bibitem{Floyd}
-R.~W. Floyd, ``Assigning meanings to programs,'' in \emph{Program
-  Verification}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 1993, pp.
-  65--81.
-
-\bibitem{Hoare}
-C.~A.~R. Hoare, ``An axiomatic basis for computer programming,''
-  \emph{Communications of the ACM}, vol.~12, no.~10, pp. 576--580, 1969.
-
-\bibitem{Eiffel}
-B.~Meyer, ``Applying'design by contract','' \emph{Computer}, vol.~25, no.~10,
-  pp. 40--51, 1992.
-
-\bibitem{b7}
-G.~C. Necula, ``Proof-carrying code,'' in \emph{Proceedings of the 24th ACM
-  SIGPLAN-SIGACT symposium on Principles of programming languages}, 1997, pp.
-  106--119.
-
-\bibitem{CompCert}
-X.~Leroy, ``Formal verification of a realistic compiler,'' \emph{Communications
-  of the ACM}, vol.~52, no.~7, pp. 107--115, 2009.
-
-\bibitem{BanescuCGNP16}
-S.~Banescu, C.~Collberg, V.~Ganesh, Z.~Newsham, and A.~Pretschner, ``Code
-  obfuscation against symbolic execution attacks,'' in \emph{Proceedings of the
-  32nd Annual Conference on Computer Security Applications}, 2016, pp.
-  189--200.
-
-\bibitem{Coq}
-B.~Barras, S.~Boutin, C.~Cornes, J.~Courant, J.-C. Filliatre, E.~Gimenez,
-  H.~Herbelin, G.~Huet, C.~Munoz, C.~Murthy \emph{et~al.}, ``The coq proof
-  assistant reference manual: Version 6.1,'' 1997.
-
-\bibitem{SFV2}
-B.~C. Pierce, A.~A. de~Amorim, C.~Casinghino, M.~Gaboardi, M.~Greenberg,
-  C.~Hricu, V.~Sj{\"o}berg, A.~Tolmach, and B.~Yorgey, ``Programming language
-  foundations, volume 2 of software foundations,'' 2010.
-
-\bibitem{Blazy2}
-S.~Blazy and A.~Trieu, ``Formal verification of control-flow graph
-  flattening,'' in \emph{Proceedings of the 5th ACM SIGPLAN Conference on
-  Certified Programs and Proofs}, 2016, pp. 176--187.
-
-\bibitem{Weiyun}
-W.~Lu, ``Formally verified code obfuscation in the coq proof assistant,'' Ph.D.
-  dissertation, Universit{\'e} d'Ottawa/University of Ottawa, 2019.
-
-\bibitem{WeiRepo}
-\BIBentryALTinterwordspacing
-W.~L{u}, ``Github repository to accompany the present research,'' 2019.
-  [Online]. Available:
-  \url{https://github.com/weiyunlu/coq-certified-obfuscation}
-\BIBentrySTDinterwordspacing
-
-\bibitem{CoNa}
-J.~Nagra and C.~Collberg, \emph{Surreptitious Software: Obfuscation,
-  Watermarking, and Tamperproofing for Software Protection: Obfuscation,
-  Watermarking, and Tamperproofing for Software Protection}.\hskip 1em plus
-  0.5em minus 0.4em\relax Pearson Education, 2009.
-
-\bibitem{Prada}
-M.~Dalla~Preda, M.~Madou, K.~De~Bosschere, and R.~Giacobazzi, ``Opaque
-  predicates detection by abstract interpretation,'' in \emph{International
-  Conference on Algebraic Methodology and Software Technology}.\hskip 1em plus
-  0.5em minus 0.4em\relax Springer, 2006, pp. 81--95.
-
-\bibitem{Wang}
-C.~Wang, J.~Hill, J.~Knight, and J.~Davidson, ``Software tamper resistance:
-  Obstructing static analysis of programs,'' Technical Report CS-2000-12,
-  University of Virginia, 12 2000, Tech. Rep., 2000.
-
-\bibitem{Cloakware}
-C.~Liem, Y.~X. Gu, and H.~Johnson, ``A compiler-based infrastructure for
-  software-protection,'' in \emph{Proceedings of the third ACM SIGPLAN workshop
-  on Programming languages and analysis for security}, 2008, pp. 33--44.
-
-\bibitem{Blazy1}
-S.~Blazy and R.~Giacobazzi, ``Towards a formally verified obfuscating
-  compiler,'' 2012.
-
-\bibitem{CollbergTax}
-C.~Collberg, C.~Thomborson, and D.~Low, ``A taxonomy of obfuscating
-  transformations,'' 1997.
-
-\bibitem{Blazy3}
-S.~Blazy and R.~Hutin, ``Formal verification of a program obfuscation based on
-  mixed boolean-arithmetic expressions,'' in \emph{Proceedings of the 8th ACM
-  SIGPLAN International Conference on Certified Programs and Proofs}, 2019, pp.
-  196--208.
-
-\end{thebibliography}
-
-%\bibliographystyle{IEEEtran}
-%\bibliography{eurosp-2020-template}
+\bibliographystyle{IEEEtran}
+\bibliography{eurosp-2020-template}
 \end{document}
