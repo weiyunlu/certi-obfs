@@ -85,7 +85,7 @@
 %\par We describe our work on opaque predicates, a simple control flow obfuscation, and elements of control flow flattening transformation, a more complex control flow obfuscation.  Along the way, we employ Hoare logic as our foundational specification language, as well as augment the IMP language with Switch statements.  We also define a lower-level flowchart language to wrap around IMP for modelling certain flattening transformations, treating blocks of codes as objects in their own right.
 
 Code obfuscation involves transforming a program to a new version that performs the same computation but hides the functionality of the original code.  An important property of such a transformation is that it preserves the behavior of the original program.
-In this paper, we lay the foundation for studying and reasoning about code obfuscating transformations, and show how the preservation of certain behaviours may be formally verified. To this end, we apply techniques of formal specification and verification using the Coq Proof Assistant.  We use and extend an existing encoding of a simple imperative language in Coq along with an encoding of Hoare logic for reasoning about this language.  We formulate what it means for a program's semantics to be preserved by an obfuscating transformation, and give formal machine-checked proofs that these behaviours or properties hold. We also define a lower-level flowchart language which is ``wrapped around'' our imperative language, allowing us to model certain flattening transformations and treat blocks of codes as objects in their own right.
+In this paper, we lay the foundation for studying and reasoning about code obfuscating transformations, and show how the preservation of certain behaviours may be formally verified. To this end, we apply techniques of formal specification and verification using the Coq Proof Assistant.  We use and extend an existing encoding of a simple imperative language in Coq along with an encoding of Hoare logic for reasoning about this language.  We formulate what it means for a program's semantics to be preserved by an obfuscating transformation, and give formal machine-checked proofs that these behaviours or properties hold. We also define a lower-level block-structured language which is ``wrapped around'' our imperative language, allowing us to model certain flattening transformations and treat blocks of codes as objects in their own right.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -97,7 +97,7 @@ We expect our software systems to function correctly. By ``correctly'', we mean 
 
 %but alas testing is known to be based on inductive reasoning where more tests passing can only increase the likelihood of correctness, so positive testing results are not a proof of correctness. 
 %I don't think it is correct to say inductive reasoning.  Most of our reasoning is Coq is by induction.  So, I changed the wording.
-\par The more testing that is done, the more confidence one has of the likelihood of correctness, but positive testing results are not a proof of correctness.
+The more testing that is done, the more confidence one has of the likelihood of correctness, but positive testing results are not a proof of correctness.
 In systems where more assurance of correctness is required, various types of deductive reasoning are often used, where formal verification methods based on theoretical foundations rooted in logic are employed. This is the approach that we adopt here.  It is important to note that formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness.  Thus, it is not a silver bullet; however, since specifications are often smaller and less complex to express, we are able to successfully reduce the trusted computing base (TCB) and increase our chances of achieving correctness.
 
 %Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don't hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
@@ -114,7 +114,7 @@ To achieve the highest level of assurance that a transformation has maintained c
 Equivalence between two versions of a program certainly implies the correctness of any program properties of interest proved for one version applies to the other.  Alternatively, what if we limit ourselves to only proving properties of interest in the ``before'' version of a program, and show that these properties are maintained in the ``after'' version of the program after a particular transformation is applied? 
 %
 %Certain simple transformations simply don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
-Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in listing \ref{lst:before}, which asserts that $y > 2$ and is easily verified visually. The snippet in listing \ref{lst:after} illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable $x$ into two  variables $x1$ and $x2$, and it is clear (visually) that the assertion $y > 2$ still holds.
+Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in listing \ref{lst:before}, which asserts that \texttt{(y > 2)} and is easily verified visually. The snippet in listing \ref{lst:after} illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable \texttt{x} into two  variables \texttt{x1} and \texttt{x2}, and it is clear (visually) that the assertion \texttt{(y > 2)} still holds.
 
 
 \begin{listing}
@@ -158,7 +158,8 @@ invalidate assertions that hold true about the ``before'' version. Obfuscation i
    \item it is as ``hard to analyze and de-obfuscate'' as a blackbox version of the program (\emph{virtual black-box property}). \label{itm:thirdproperty}
 \end{enumerate}
 %``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
-``Prying eyes'' could, for example, be some kind of static analysis tool where an attacker is trying to determine certain facts about the code, and obfuscation is trying to make this difficult. The program in listing \ref{lst:beforeopaque} is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing \ref{lst:afteropaque} is the ``after'' program where a non-linear \emph{opaque predicate transformation} (see Section~\ref{sec:opaque}) has been applied to hide the fact that at program's end, the value of $z$ is in fact 30. In this case, it follows from the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$. 
+``Prying eyes'' could, for example, be some kind of static analysis tool where an attacker is trying to determine certain facts about the code, and obfuscation is trying to make this difficult. The program in Listing \ref{lst:beforeopaque} is correct with respect to the assertion that is expressed (e.g. \texttt{z == 30}) as is evident by simple inspection of the code. The program snippet in Listing \ref{lst:afteropaque} is the ``after'' program where a non-linear \emph{opaque predicate transformation} (see Section~\ref{sec:opaque}) has been applied to hide the fact that at program's end, the value of \texttt{z} is in fact \texttt{30}. In this case, it follows from the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$. 
+
 %This paper describes steps towards implementing a framework in the Coq Proof Assistant and based on IMP\cite{SFV2}, a simple imperative language to study obfuscating transformations, their impact on programs and how specified behaviour may be preserved beyond the transformations. A number of initial goals and principles drove the direction of this research: 
 This paper describes steps towards implementing a framework in the Coq Proof Assistant \cite{Coq} for a simple imperative language that allows us to study obfuscating transformations, their impact on programs, and how specified behaviour may be preserved beyond the transformations. Our starting point is the IMP language from \cite{SFV2}, which includes an encoding in Coq of a familiar small imperative language along with its formalized semantics.
 A number of initial goals and principles drove the direction of this research: 
@@ -167,11 +168,11 @@ A number of initial goals and principles drove the direction of this research:
  % \item Accessibility to as wide an audience as possible: an obvious option was to use CompCert and Clight as \cite{Blazy2} has done. We would have started with lots of proofs and formalisms for free (already done by the CompCert team) however the significant learning curve associated with learning CompCert infrastructure seemed prohibitive. We deemed IMP and the Coq infrastructure much more accessible.\label{goal2}
  % \item Extendibility of the framework: Following the lead of \cite{SFV2} where a number of extensions to IMP are easily added and studied, we wanted the ability to build our obfuscation infrastructure incrementally on top of IMP.\label{goal3}
  % \end{enumerate*} 
- \begin{enumerate*}
+ \begin{enumerate}
   \item We don't want to reinvent the wheel, which is why we start with IMP.
   \item We want to assure accessibility to as wide an audience as possible. For this reason, we choose IMP over CompCert and Clight, which are used in \cite{Blazy2}.  On the one hand, building on CompCert would have given us lots of proofs and formalisms for free; however, the significant learning curve associated with this infrastructure seemed prohibitive, and thus much less accessible.\label{goal2}
   \item We want the framework to be extendable.  Following the lead of \cite{SFV2}, where a number of extensions to IMP are easily added and studied, we wanted the ability to build our obfuscation infrastructure incrementally on top of IMP.\label{goal3}
-  \end{enumerate*}
+  \end{enumerate}
 
  \begin{listing}
 \caption{Original Code}
@@ -233,17 +234,21 @@ int main (int argc, char *argv[])
  
 Keeping these research goals in mind the contributions of this paper are the following:
 \begin{itemize}
-    \item We consider different formulations of what it means for a transformation to be semantics-preserving: we cover \emph{command equivalence} in Sections \ref{commequiv} and \ref{naive} as well as \emph{Hoare logic equivalence} in Section \ref{hoarequiv}. By command equivalence, we mean that if the two programs start out in the same state, then the state resulting after execution of each program is exactly the same.  By state, we mean variable names and their values; these values can change during execution, but at the end, all variable values must have changed in exactly the same way.  This is the notion of equivalence mentioned above. Hoare logic equivalence is a weaker notion that is enough for most code obfuscation transformations. It allows an obfuscated program to use and modify variables that don't occur in the assertion.  Only the values of variables that occur in the assertion are required to have the same values at the end of execution.  Using Hoare logic equivalence is a novel approach, which leads to establishing a central strategy to ``Formal Verification of Program Obfuscation'': our obfuscated programs will be ``decorated''  \`a la  Pierce \cite{SFV2} with additional assertions whose proofs will also be provided\label{itm:1}. The additional assertions that our obfuscators will provide will be needed to show the original desired behaviour still holds after an obfuscation.\footnote{Bahman and Amy: find a good place to cover this proposal and if so update the reference to \ref{hoarequiv} above.}
+    \item We consider different formulations of what it means for a transformation to be semantics-preserving: we cover \emph{command equivalence} in Sections \ref{commequiv} and \ref{naive} as well as \emph{Hoare logic equivalence} in Section \ref{hoarequiv}. By command equivalence, we mean that if the two programs start out in the same state, then the state resulting after execution of each program is exactly the same.  By state, we mean variable names and their values; these values can change during execution, but at the end, all variable values must have changed in exactly the same way.  
+    %This is the notion of equivalence mentioned above. 
+    Hoare logic equivalence is a weaker notion that is enough for most code obfuscation transformations. It allows an obfuscated program to use and modify variables that don't occur in the assertion.  Only the values of variables that occur in the assertion are required to have the same values at the end of execution.  Using Hoare logic equivalence is a novel approach, which leads to establishing a central strategy to ``Formal Verification of Program Obfuscation'': our obfuscated programs will be ``decorated''  \`a la  Pierce \cite{SFV2} with additional assertions whose proofs will also be provided\label{itm:1}. The additional assertions that our obfuscators will provide will be needed to show the original desired behaviour still holds after an obfuscation.\footnote{Bahman and Amy: find a good place to cover this proposal and if so update the reference to \ref{hoarequiv} above.}
     
     
     \item We give motivations and a top-level explanations for all of the transformations and one of the proofs (the main one in Section~\ref{sec:flattening}).  Proofs in Coq are done by giving step-by-step commands called \emph{tactics}, which break the goal (the statement to be proven) into subgoals until each branch of the proof is completed.  (We don't discuss tactics, but
     %\footnote{AF: We agreed to remove this paragraph.  I am leaving it here for now until we figure out where to refer to Wei's thesis, and maybe include a discussion about this at that point.}
-    refer the reader to \cite{Weiyun} for a more detailed treatment of both the proofs and tactics.) To the best of our knowledge, the existing literature does not provide this level of detail, which here provides an accessible explanation of not just obfuscation techniques, but also in tandem with its formalization and verification inside Coq. This follows from research goal \ref{goal2}.\footnote{Phil asks Why?}\label{itm:2}
+    refer the reader to \cite{Weiyun} for a more detailed treatment of both the proofs and tactics.) 
+    %To the best of our knowledge, the existing literature does not provide this level of detail, which here provides an accessible explanation of not just obfuscation techniques, but also in tandem with its formalization and verification inside Coq. This follows from research goal \ref{goal2} above.%\footnote{Phil asks Why?}\label{itm:2}
+    To the best of our knowledge, the existing literature does not provide this level of detail. We provide not only an accessible explanation of obfuscation techniques but also their formalization and verification inside Coq. This follows along the lines of research goal \ref{goal2}. 
  
     %\item We begin with a minimal imperative programming language inside Coq for reasoning about programs and their transformations, and then augment it as needed for control flow flattening algorithms, first by augmenting its syntax and semantics with switch statements, and then by defining a lower-level flowchart language that wraps around blocks of code in order to model real-world intermediate languages used in obfuscation tools. This follows our research goals \ref{goal2} and \ref{goal3}. \label{itm:3}
    \item We begin with a minimal version of IMP and augment it as needed for \emph{control flow flattening algorithms} (see Section~\ref{sec:flattening}),
    %\footnote{AF: Like ``opaque predicate transformation'', I put this in italics and I think it needs a forward reference.} 
-   first by augmenting its syntax and semantics with switch statements, and then by defining a lower-level flowchart language that wraps around blocks of code in order to model real-world intermediate languages used in obfuscation tools. This follows our research goals \ref{goal2} and \ref{goal3}. \label{itm:3}
+   first by augmenting its syntax and semantics with switch statements, and then by defining a lower-level block-structured language that wraps around blocks of code in order to model real-world intermediate languages used in obfuscation tools. This contributes to research goals \ref{goal2} and \ref{goal3}. \label{itm:3}
 \end{itemize}
 
 This project, and in particular, the formalization in Coq, was motivated by the Cloakware obfuscation tool produced at Irdeto, and the interest in showing the correctness of some of its core functionality in safety critical environments.\footnote{Much of it was carried out during the first author's co-op term at Irdeto under the supervision of the second author, who further developed it in his Master's thesis \cite{Weiyun}; all lemmas and theorems referred to in this paper are formally proved in Coq.} For details of the Coq code and fuller explanations of the proofs, the reader is referred to \cite{WeiRepo} and \cite{Weiyun}, respectively.
@@ -257,7 +262,7 @@ This project, and in particular, the formalization in Coq, was motivated by the 
 %Coq \cite{Coq} is a formal proof management system, an implementation of the \emph{Calculus of (co)inductive constructions}, which provides a formal language in which one can write mathematical definitions, algorithms and theorems, and an environment for the development of machine-checked proofs.  It is implemented (mostly) in OCaml\footnote{See \href{https://www.ocaml.org}{https://www.ocaml.org}.} and (a little bit of) C.
 
 \section{The IMP Language and Hoare Logic}
-We now give the necessary definitions and theorems from Software
+We now give the necessary definitions from Software
 Foundations \cite{SFV2} needed to understand our formalization in the
 sections that follow.  Along the way, we describe the features of Coq
 that we use.  
@@ -276,7 +281,7 @@ The definition of \texttt{aexp} in~\cite{SFV2} is defined using the same techniq
 
 To define the operational semantics of IMP, the notion of a state is needed. We introduce a type called \texttt{state} defined to be an abbreviation for the type \texttt{string -> nat}.  Here, \texttt{nat} is Coq's built in type for natural numbers $\mathbb{N}$.  Although, we restrict our formal development to natural numbers, it could be easily extended to other types such as \texttt{int} or \texttt{float}.  An \textit{initial state} in Coq is a function that maps all variables to the default value $0$.  States are modified using an update operator.  For example, the state \verb|s & { X --> 3; Y --> 1}| represents a state in which \texttt{s} is modified so that \texttt{X} has the value \texttt{3} and \texttt{Y} has the value \texttt{1}.  The ``\verb|s &|'' can be omitted if the update is to an initial state.
 
-Evaluation of commands can be viewed as a function from a command and a starting state to a new state.  It is encoded as a relation in Coq, and the notation \verb|c / s1 \\ s2| means that starting in state \texttt{s1} and executing \texttt{c} results in a new state \texttt{s2}.  We say that ``\texttt{c} takes \texttt{s1} to \texttt{s2}.''  The definition of this relation relies on two functions.  The first is \texttt{aeval};
+Evaluation of commands can be viewed as a partial function from a command and a starting state to a new state.  It is encoded as a relation in Coq, and the notation \verb|c / s1 \\ s2| means that starting in state \texttt{s1} and executing \texttt{c} results in a new state \texttt{s2}.  We say that ``\texttt{c} takes \texttt{s1} to \texttt{s2}.''  The definition of this relation relies on two functions.  The first is \texttt{aeval};
 the expression \texttt{(aeval s a)} evaluates \texttt{a} (an element of \texttt{aexp}) in a state \texttt{s}, resulting in a natural number. The function \texttt{beval} is similar and maps a \texttt{bexp} to a Coq boolean.  (We omit the details of these definitions.)
 
 %, an interactive textbook on the mathematical foundations of reliable software, which is actually entirely a Coq script.
@@ -288,7 +293,7 @@ the expression \texttt{(aeval s a)} evaluates \texttt{a} (an element of \texttt{
 %\par IMP is built up piece by piece in \cite{SFV2} with multiple iterations (some failed, some tangential) for pedagogical purposes, but we will only present the final form that we end up using.  IMP has the basics of natural number arithmetic, booleans, and commands consisting of assignment, skip, if-then-else, and while-do-end.
 
 \subsection{Command Equivalence Definition}\label{commequiv} 
-    For two commands (IMP programs) $c_1$ and $c_2$ to be command equivalent means that for any pair of states $st$ and $st'$, $c_1$ takes $st$ to $st'$ if and only if $c_2$ takes $st$ to $st'$.  In Coq, \texttt{cequiv}\cite{SFV2}  is defined as a predicate that takes two commands as arguments:
+    For two commands (IMP programs) \texttt{c1} and \texttt{c2} to be command equivalent means that for any pair of states \texttt{st} and \texttt{st'}, \texttt{c1} takes \texttt{st} to \texttt{st'} if and only if \texttt{c2} takes \texttt{st} to \texttt{st'}.  In Coq, \texttt{cequiv}\cite{SFV2}  is defined as a predicate that takes two commands as arguments:
 \begin{defin}[Comand equivalence]\label{def:cequiv}
 \begin{verbatim}
 Definition cequiv (c1 c2 : com) : Prop 
@@ -324,8 +329,8 @@ An \emph{assertion} about a program's state is a function from states to proposi
   Definition Assertion := state -> Prop.
 \end{verbatim}
 \end{defin}
-Informally, for some assertion $P$ and some state $st$, the proposition $P(st)$ represents the statement that $P$ holds in state $st$.  
-As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $P(st)$ is the proposition ``$x = 0$ in the state $st$".  In Coq, Hoare triples have three arguments, a command and two assertions:
+Informally, for some assertion $P$ and some state $st$, the proposition $(P~st)$ represents the statement that $P$ holds in state $st$.  
+As an example, let $st$ be the state where the value of every variable is 0.  Let $P$ be the assertion that $x=0$.  Then $(P~st)$ is the proposition ``$x = 0$ in the state $st$''.  In Coq, Hoare triples have three arguments, a command and two assertions:
 \begin{verbatim}
 Definition hoare_triple (P:Assertion)
   (c:com) (Q:Assertion) : Prop :=
@@ -333,7 +338,7 @@ Definition hoare_triple (P:Assertion)
   P st  -> Q st'.
 \end{verbatim}
 %Note that in the formal version, states must be explicit.
-and expresses that if $P$ holds in state $st$ and $c$ takes $st$ to $st'$, then $Q$ holds in $st'$.  We will sometimes use the notation $\{\{P\}\}c\{\{Q\}\}$.
+and expresses that if \texttt{P} holds in state \texttt{st} and \texttt{c} takes \texttt{st} to \texttt{st'}, then \texttt{Q} holds in \texttt{st'}.  We will sometimes use the notation \texttt{\{\{P\}\}c\{\{Q\}\}}  to represent the Coq expression \texttt{(hoare\_triple P c Q)}.
 
 Proving that a Hoare triple holds is a line-by-line affair, starting from the bottom of a program and working upwards.  There is one rule for each kind of IMP command, and the application is mostly mechanical, except for the \texttt{WHILE} statement (see \cite{SFV2}).
 
@@ -343,11 +348,11 @@ An \emph{opaque predicate} \cite{CoNa} is a predicate that always evaluates to e
 
 Of course, the most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
 
-An \emph{opaque predicate transformation} takes as inputs a program to be obfuscated, $c_1$, an opaque predicate $P$, and a dummy program $c_2$, and returns the program:
+An \emph{opaque predicate transformation} takes as inputs a program to be obfuscated, \texttt{c1}, an opaque predicate \texttt{P}, and a dummy program \texttt{c2}, and returns the program:
 \begin{verbatim}
     IFB (P x) THEN c1 ELSE c2 FI.
 \end{verbatim}
-It is not known to an attacker, a priori, that $c_2$ is a dummy program. In practice, $c_2$ should be complicated enough to appear that it could feasibly be intended to be executed. For example, $c_2$ is often an actual command/statement randomly chosen to be the dummy program.
+It is not known to an attacker, a priori, that \texttt{c2} is a dummy program. In practice, \texttt{c2} should be complicated enough to appear that it could feasibly be intended to be executed. For example, \texttt{c2} is often an actual command/statement randomly chosen to be the dummy program.
 
 In Section \ref{naive}, we describe our initial (straightforward, naive) attempt, in which the transformation introduces new variables (as is standard in writing code in a typical imperative language), assigns them values and then uses them in the opaque predicate.  Using this approach, trying to state a general theorem about command equivalence ends up being problematic.  
 
@@ -362,8 +367,8 @@ Second, we reformulate the transformation to rely on values already existing in 
 %but can use static analysis to gain information, and we show that the attacker ends up gaining weaker knowledge.
 
 \subsection{Command Equivalence}\label{naive}
-\begin{defin}[Factorial program (countdown nonzero formulation)]\label{Fact}
-    The following IMP program computes the factorial of a nonzero natural number.  The input is read from $X$, temporary values are stored as $Z$, and the factorial of the input is stored in $Y$ as the output.
+\begin{defin}[Factorial program, countdown nonzero formulation]\label{Fact}
+    The following IMP program computes the factorial of a nonzero natural number.  The input is read from \texttt{X}, temporary values are stored as \texttt{Z}, and the factorial of the input is stored in \texttt{Y} as the output.
 \begin{verbatim}
 Definition fact_nonzero : com :=
   Z ::= X;;
@@ -378,7 +383,7 @@ Definition fact_nonzero : com :=
     The choice of factorial program as a candidate for examples of obfuscation is somewhat arbitrary.  It works well for illustrative purposes, as it is neither too complex nor completely trivial.
 
 \begin{example}\label{firstoff}
-    The $fact\_nonzero$ program with input $X=3$ yields output $Y=6$.  
+    The \texttt{fact\_nonzero} program with input \texttt{X = 3} yields output \texttt{Y = 6}.  
     %However, the story is not quite so simple (it is true that input $X=3$ yields $Y=6$, but as one can see in the Coq example, the state keeps track of the value of every variable involved in the program.).  The specification of this statement in Coq is
 \begin{verbatim}
 Example factorial_3: 
@@ -387,7 +392,8 @@ fact_nonzero / { X --> 3 } \\
   Z --> 2; Y --> 6; Z --> 1 }.
 \end{verbatim}
 \end{example}
-    The \texttt{Example} keyword in Coq is followed by a name, a colon, and a statement, which is then followed by a proof. Note that in the above statement, the final state holds the information of every intermediate assignment made by the program.  The rightmost value of each variable contains its final value and thus we can discern the correct output $Y=6$.  
+    The \texttt{Example} keyword in Coq is followed by a name, a colon, and a statement (a logical proposition in Coq), which is then followed by a proof. In this case, the statement expresses that the \texttt{fact\_nonzero} program takes the state \verb|{ X --> 3 }| to the state \verb|{ X --> 3;| \verb|Z --> 3;| \verb|Y --> 1;| \verb|Y --> 3;| \verb|Z --> 2;| \verb|Y --> 6;| \verb|Z --> 1 }|.
+    Note that the final state contains the information for every intermediate assignment made by the program.  The rightmost value of each variable contains its final value and thus we can discern the correct output \texttt{Y = 6}.  
     (For the Coq proof of this statement, and all other examples and theorems in this and the next section, refer to \cite{WeiRepo}.)
     %The named declaration (e.g. $factorial\_3$) specifies our expectations in the form of an assertion which can be verified by Coq given a proof (refer to \cite{WeiRepo} for a step by step proof). 
     
@@ -412,13 +418,13 @@ Definition opaque_trans x c1 c2 :=
   Z'' ::= Z'' * Z'' ;;
   IFB (BEq Z' Z'') THEN c1 ELSE c2 FI.
 \end{verbatim}
-Here \texttt{(ANum x)} is the representation of the number $x$ as an arithmetic expression (of type \texttt{aexp}).  The $opaque\_trans$ function takes three arguments as input: a number $x$, and programs $c_1$ and $c_2$, and returns the new program that executes $c_1$ if the equation
+Here \texttt{(ANum x)} is the representation of the number \texttt{x} as an arithmetic expression (of type \texttt{aexp}).  The \texttt{opaque\_trans} function takes three arguments as input: a number \texttt{x}, and programs \texttt{c1} and \texttt{c2}, and returns the new program that executes \texttt{c1} if the equation
 \[
 	(x * x + x + x + 1) = (x + 1) * (x + 1)
 \]
-holds and executes $c_2$ otherwise.  Of course, the above equation is true for all $x$ (which we have proved in Coq), so the resulting program should be the same as $c_1$.  We'd like to claim that a program transformed by $opaque\_trans$ is equivalent to the original.
+holds and executes \texttt{c2} otherwise.  Of course, the above equation is true for all $x$ (which we have proved in Coq), so the resulting program should be the same as \texttt{c1}.  We'd like to claim that a program transformed by \texttt{opaque\_trans} is equivalent to the original.
 
-What do we mean when we say the transformed program should be ``equivalent''?  Example \ref{firstfact} shows what happens when $opaque\_trans$ is applied to the $factorial\_3$ example.  
+What do we mean when we say the transformed program should be ``equivalent''?  Example \ref{firstfact} shows what happens when \texttt{opaque\_trans} is applied to the \texttt{fact\_nonzero} example.  
 %First, however, let's state the fact that our opaque predicate is always true formally as lemma \ref{opaqueness} (refer to \cite{Weiyun} for the proof).
 
 
@@ -429,7 +435,7 @@ What do we mean when we say the transformed program should be ``equivalent''?  E
 %\end{lemma}
 
 \begin{example}\label{firstfact}
-    For any $x\in \mathbb{N}$ and any program $c_2$, $opaque\_trans$ x $fact\_nonzero$ $c2$ with input $X=3$ yields output $Y=6$.  In Coq, however, it looks as follows.
+    For any $\mathtt{x}\in \mathbb{N}$ and any program \texttt{c2}, \texttt{opaque\_trans x fact\_nonzero c2} with input \texttt{X = 3} yields output \texttt{Y = 6}.  In Coq, however, it looks as follows.
 \begin{verbatim}
 Example factorial_3_opaque_trans:
   forall x c2, 
@@ -463,7 +469,7 @@ The proof of this statement begins by instantiating variables and unfolding defi
 \end{verbatim}
 \end{example}
 
-The proof of this theorem illustrates that our opaque predicate transformation worked; however, there seems to be no direct way to generalize Example \ref{firstfact} in terms of command equivalence. We cannot use $cequiv$ (Definition~\ref{def:cequiv})---that is, we can't use it with the current formulation of the transformation---since the transformation introduces new variables, which affect the value of the end state, even if those variables are not of interest to us. In particular, note that although variable $Y$ has the same value in the end states in Examples~\ref{firstoff} and~\ref{firstfact}, the rest of the state information is not identical. We'll revisit command equivalence in Section \ref{noass}.
+Having a proof of this theorem illustrates that our opaque predicate transformation worked; however, there seems to be no direct way to generalize Example \ref{firstfact} in terms of command equivalence. We cannot use \texttt{cequiv} (Definition~\ref{def:cequiv})---that is, we can't use it with the current formulation of the transformation---since the transformation introduces new variables, which affect the value of the end state, even if those variables are not of interest to us. In particular, note that although variable \texttt{Y} has the same value in the end states in Examples~\ref{firstoff} and~\ref{firstfact}, the rest of the state information is not identical. We'll revisit command equivalence in Section \ref{noass}.
       
 %We cannot use $cequiv$ (Definition~\ref{def:cequiv})---that is, we can't use it with the current formulation of the transformation --- since new variables and assignments are introduced and kept track of in the definition of the state, even if we ultimately don't care about them.  
 %\par Thus we were not ultimately successful, in this initial approach, in formulating a statement with command equivalence (\ref{commequiv}).  We'll revisit this in Section \ref{noass}.
@@ -473,8 +479,8 @@ The proof of this theorem illustrates that our opaque predicate transformation w
 In this section, we explore using Hoare logic to specify program conditions, and then generalize the result as much as we can.  The main idea with Hoare logic is that we can be more specific about what we wish a transformation to preserve which it turns out is often good enough. %In the following, we wish to preserve the fact that the value of a single variable before the program runs and the value of a single variable after the program finishes. 
 First, we'll use a slightly different formulation of the factorial program.
 
-\begin{defin}[Factorial program (count-up formulation)]\label{def:factup}
-This version of the factorial program counts up from zero rather than down from $X$, and works for input $0$ as well.
+\begin{defin}[Factorial program, count-up formulation]\label{def:factup}
+This version of the factorial program counts up from zero rather than down from \texttt{X}, and works for input \texttt{0} as well.
 \begin{verbatim}
 Definition fact_program : com :=
   Y ::= 1;;
@@ -486,14 +492,14 @@ Definition fact_program : com :=
 \end{verbatim}
 \end{defin}
 
-We begin by defining assertions about the values of $X$ and $Y$ in Coq as follows.
+We begin by defining assertions about the values of \texttt{X} and \texttt{Y} in Coq as follows.
 \begin{verbatim}
 Definition as_x (x0 : nat) : Assertion 
    := (fun st => st X = x0).
 Definition as_y (y0 : nat) : Assertion 
    := (fun st => st Y = y0).
 \end{verbatim}
-We restate Example \ref{firstoff}, replacing the specific values of $3$ and $6$ with arbitrary natural numbers, expressed as the following Hoare triple:
+We restate Example \ref{firstoff}, replacing the specific values of \texttt{3} and \texttt{6} with arbitrary natural numbers, expressed as the following Hoare triple:
 %\[
 %    (| X = x_0 |)\ fact\_program\ (| Y = x_0! |).
 %\]
@@ -509,11 +515,11 @@ Example factorial_all_hoare: forall xo,
    {{ as_y (fact xo) }}.
 \end{verbatim}
 \end{example}
-Example \ref{hoareexample1} states that when $X = x_0$ before the (unobfuscated) \textit{fact\_program} runs, then $Y = x_0!$ afterward,
+Example \ref{hoareexample1} states that when \texttt{X = x0} before the (unobfuscated) \texttt{fact\_program} runs, then \texttt{Y = (fact x0)} afterward,
 %(see \cite{Weiyun} for the full proof), 
-where \texttt{fact} above is the mathematical definition of the factorial function expressed in Coq.
+where \texttt{fact} is the mathematical definition of the factorial function expressed in Coq.
 
-We now turn to showing that when we obfuscate $\textit{fact\_program}$, it remains the case that $X = x_0$ beforehand implies that $Y = x_0!$ when the program finishes.
+We now turn to showing that when we obfuscate \texttt{fact\_program}, it remains the case that \texttt{X = x0} beforehand implies that \texttt{Y = (fact x0)} when the program finishes.
 In the following, we use a new formulation of the opaque predicate transformation, where we collapse the assignments into single lines.
 \begin{verbatim}
 Definition opaque_trans' x c1 c2 :=
@@ -524,13 +530,14 @@ Definition opaque_trans' x c1 c2 :=
 \end{verbatim}
 
 \begin{example}\label{hoarel2}
-    We now apply the transformation $opaque\_trans'$ to $fact\_program$ to obtain the following statement expressing that the same Hoare triple holds with the obfuscated factorial program in place of the original program.\footnote{AF: Using both the Hoare logic notation and the Coq notation is sometimes confusing.  Here, we need an explanation about why $X$ is used in the Hoare triple and universally quantified \texttt{x} is used in the Coq code. I don't understand it myself.}
+    We now apply the transformation \texttt{opaque\_trans'} to \texttt{fact\_program} to obtain the following statement expressing that the same Hoare triple holds with the obfuscated factorial program in place of the original program.
+    %\footnote{AF: Using both the Hoare logic notation and the Coq notation is sometimes confusing.  Here, we need an explanation about why $X$ is used in the Hoare triple and universally quantified \texttt{x} is used in the Coq code. I don't understand it myself.}
     %(see \cite{Weiyun} for the proof):
     \[
     \begin{array}{l}
 %    \forall x_0 \in \mathbb{N},\ \forall c_2 \in Com,
-    \forall x_0, c_2\\
-    (|X=x_0|)\ opaque\_trans'\ X\ fact\_program\ c_2\\ (|Y=x_0!|)
+    \forall x, x_0, c_2\\
+    (|X=x_0|)\ opaque\_trans'\ x\ fact\_program\ c_2\\ (|Y=x_0!|)
     \end{array}
     \]
     which in Coq is:
@@ -551,7 +558,7 @@ where $c$ is factorial or the transformed version of factorial.  Indeed, the dec
 %\footnote{Our result is still rather specific; the only pre-condition we treat is that a specific variable $X$ takes on some value, and the only post-condition we treat is that a specific variable $Y$ takes on some value.  The pre- and post- conditions in Hoare logic could be more general, such as assertions that a variable isn't equal to some value, is greater than some value, or a conjunction or disjunction of several other statements.}
 %Let's introduce a new term: \emph{Hoare fidelity}, where we first
 
-\begin{defin}[Hoare fidelity (with respect to input X and output Y)]
+\begin{defin}[Hoare fidelity, with respect to input X and output Y]
 A program $c_2$ preserves the Hoare fidelity of a program $c_1$ with respect to input X and output Y, if the validity of the Hoare triple
 \[
 (| X = x_0 |)\ c_1\ (| Y = y_0 |)
@@ -572,7 +579,7 @@ Definition Hoare_fidelity_xy c1 c2
 %(see \cite{Weiyun} for the proof): 
 %
 \begin{theorem}\label{hoare_xy_main}
-For all programs $c_1$ and $c_2$, and all $x \in \mathbb{N}$, the transformed program $(opaque\_trans'\ x\ c_1\ c_2)$ preserves the Hoare fidelity of $c_1$ with respect to input $X$ and output $Y$.
+For all programs \texttt{c1} and \texttt{c2}, and all $\mathtt{x} \in \mathbb{N}$, the transformed program \texttt{(opaque\_trans' x c1 c2)} preserves the Hoare fidelity of \texttt{c1} with respect to input \texttt{X} and output \texttt{Y}.
 In Coq, \begin{verbatim}
 Theorem Opaque_trans_hoare_fidelity_xy: 
  forall x c1 c2,
@@ -628,9 +635,9 @@ Definition
 \end{verbatim}
 
 \begin{theorem}\label{generalcequiv}
-If a predicate $b$ is boolean equivalent to $true$, then for any programs $c_1$ and $c_2$,
-the program $c_1$ is command equivalent to the program resulting from applying \textit{make\_opaque\_pred}
-to $b$, $c_1$, and $c_2$. 
+If a predicate \texttt{b} is boolean equivalent to $true$, then for any programs \texttt{c1} and \texttt{c2},
+the program \texttt{c1} is command equivalent to the program resulting from applying \texttt{make\_opaque\_pred}
+to \texttt{b}, \texttt{c1}, and \texttt{c2}. 
 \end{theorem}
 
 The power of the result stated in Theorem \ref{generalcequiv}
@@ -953,10 +960,10 @@ The difference is that the first function forms a regular If-Then-Else statement
 %The proof (see \cite{Weiyun} for details) follows the same structure and ideas as the more %general Theorem \ref{maintheo} to come.
 %\end{example}
 
-Before we state the general theorem that any program's preprocessed and transformed forms are command equivalent, we have to fully account for the newly introduced switch variable which controls the switch statement, called $swVar$ in Listings~\ref{listing:preprocess} and~\ref{listing:flatten}. If the original program already uses this variable in some way, then command equivalence will not necessarily hold. For example, suppose the header of the program to be transformed contains the assignment $swVar := 999$.  This would then completely bypass the entire flattened switch construct!  We avoid this problem with the definition below of \emph{evaluation invariance}, followed by a lemma about it.
+Before we state the general theorem that any program's preprocessed and transformed forms are command equivalent, we have to fully account for the newly introduced switch variable which controls the switch statement, called \texttt{swVar} in Listings~\ref{listing:preprocess} and~\ref{listing:flatten}. If the original program already uses this variable in some way, then command equivalence will not necessarily hold. For example, suppose the header of the program to be transformed contains the assignment \texttt{swVar := 999}.  This would then completely bypass the entire flattened switch construct!  We avoid this problem with the definition below of \emph{evaluation invariance}, followed by a lemma about it.
 
 \begin{defin}[Evaluation invariance]
-A program $c$ is \emph{evaluation invariant} with respect to a variable $X$ if, for all states $st$ and $st'$ and all $n \in \mathbb{N}$, $c$ evaluates $st$ to $st'$ if and only if $c$ evaluates $st$ updated with $(X \longrightarrow n)$ to $st'$ updated with $(X\longrightarrow n)$.
+A program \texttt{c} is \emph{evaluation invariant} with respect to a variable \texttt{X} if, for all states \texttt{st} and \texttt{st'} and all $\mathtt{n} \in \mathbb{N}$, \texttt{c} evaluates \texttt{st} to \texttt{st'} if and only if \texttt{c} evaluates \texttt{st} updated with \texttt{X --> n} to \texttt{st'} updated with \texttt{X --> n}.
 In Coq:
 \begin{verbatim}
 Definition eval_invariant c X := 
@@ -965,10 +972,10 @@ Definition eval_invariant c X :=
       \\ st' & { X --> n }.
 \end{verbatim}
 \end{defin}
-In other words, if the only thing that changes about the start state is the value of $X$, there is no impact on evaluation with the sole exception of the same change to $X$ in the end state.  
+In other words, if the only thing that changes about the start state is the value of \texttt{X}, there is no impact on evaluation with the sole exception of the same change to \texttt{X} in the end state.  
 
 \begin{lemma}\label{independence}
-Evaluation invariance implies evaluation independence in the sense that, if a command $c$ is evaluation invariant with respect to $X$, then if $c$ evaluates a state $st$ updated with $(X\longrightarrow n)$ for some $n \in \mathbb{N}$ to $st'$, then $c$ also evaluates $st$ to $st'$.  In Coq,
+Evaluation invariance implies evaluation independence in the sense that, if a command \texttt{c} is evaluation invariant with respect to \texttt{X}, then if \texttt{c} evaluates a state \texttt{st} updated with \texttt{X -->  n} for some $\mathtt{n} \in \mathbb{N}$ to \texttt{st'}, then \texttt{c} also evaluates \texttt{st} to \texttt{st'}.  In Coq,
 \begin{verbatim}
 Lemma eval_inv_imp_eval_ind: 
   forall c X n st st', 
@@ -980,7 +987,7 @@ Lemma eval_inv_imp_eval_ind:
 
 In order to state and prove the main theorem, we also need the related concept of \emph{boolean invariance}.
 \begin{defin}[Boolean invariance]\index{boolean invariance}
-A boolean expression $b$ is \emph{boolean invariant} with respect to a variable $X$ if for all states $st$ and all $n \in \mathbb{N}$, the boolean evaluation of $b$ in $st$ is the same as the boolean evaluation of $b$ in $st$ updated with $(X\longrightarrow n)$.
+A boolean expression \texttt{b} is \emph{boolean invariant} with respect to a variable \texttt{X} if for all states \texttt{st} and all $\mathtt{n} \in \mathbb{N}$, the boolean evaluation of \texttt{b} in \texttt{st} is the same as the boolean evaluation of \texttt{b} in \texttt{st} updated with \texttt{X --> n}.
 In Coq:
 \begin{verbatim}
 Definition beval_invariant b X :=
@@ -992,7 +999,7 @@ Definition beval_invariant b X :=
 
 We can now state the main theorem. In particular, control flow flattening of If-Then-Else constructs is sound in the following sense:
 \begin{theorem}\label{maintheo}
-Fix the variable $swVar$ for the control flow flattening transformation.  
+Fix the variable \texttt{swVar} for the control flow flattening transformation.  
 For any program of the form \verb$header;;IFB cond THEN c1 ELSE c2 END$ \verb$;; footer$, we have command equivalence between the following two programs (which we will call \texttt{p1} and \texttt{p2} in the proof below):
 \begin{verbatim}
    preprocess_program header cond
@@ -1003,8 +1010,8 @@ For any program of the form \verb$header;;IFB cond THEN c1 ELSE c2 END$ \verb$;;
 
 as long as the following hold:
 \begin{itemize}
-    \item The commands $footer$, $c1$, and $c2$ are evaluation invariant with respect to $swVar$.
-    \item The boolean condition $cond$ is boolean invariant with respect to $swVar$.
+    \item The commands \texttt{footer}, \texttt{c1}, and \texttt{c2} are evaluation invariant with respect to \texttt{swVar}.
+    \item The boolean condition \texttt{cond} is boolean invariant with respect to \texttt{swVar}.
 \end{itemize}
 In Coq:
 \begin{verbatim}
@@ -1118,7 +1125,7 @@ We do not describe the transformation any further, but just note that the transf
 "L5" --> bJump (B ::= B - 1) "L2"
 \end{verbatim}
  %We transform\footnote{Phil:Too compressed.  Maybe put the details into an appendix.} it into the dismantled version which is basically the same program but using basic blocks and labels and jumps. We show that the `DismantledProgram` will, like the `OriginalProgram`, evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$. We then manually build the flattened version of `DismantledProgram` component by component and show that the resulting `FlattenedProgram` will, like the `OriginalProgram` and the `DismantledProgram` evaluate a state that begins with $A = 1$ and $B = 2$ to a final state that has $RETURN = 12$ (see \cite{Weiyun} for details).
-We have proved that both versions of the program, when starting in a state with $A = 1$ and $B = 2$, evaluate to the same final state with $RETURN = 12$. Future work includes extending our command equivalence theorem to this kind of transformation.
+We have proved that both versions of the program, when starting in a state with \texttt{A = 1} and \texttt{B = 2}, evaluate to the same final state with \texttt{RETURN = 12}. Future work includes extending our command equivalence theorem to this kind of transformation.
 
 \section{Obfuscation in Coq: Related Work}
 %There have been three papers, in all of which Sandrine Blazy (Universit\'{e} de Rennes 1) appears as a coauthor, that study code obfuscation in Coq.
@@ -1162,6 +1169,6 @@ In closing, we stress, once more, that it \emph{is} important to actually apply 
 
 %\input{oldbib}
 
-\bibliographystyle{IEEEtran}
+\bibliographystyle{IEEEtranS}
 \bibliography{eurosp-2020-template}
 \end{document}
