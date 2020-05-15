@@ -101,7 +101,7 @@ The more testing that is done, the more confidence one has of the likelihood of 
 In systems where more assurance of correctness is required, various types of deductive reasoning are often used, where formal verification methods based on theoretical foundations rooted in logic are employed. This is the approach that we adopt here.  It is important to note that formal verification transfers the problem of confidence in program correctness to the problem of confidence in specification correctness.  Thus, it is not a silver bullet; however, since specifications are often smaller and less complex to express, we are able to successfully reduce the trusted computing base (TCB) and increase our chances of achieving correctness.
 
 %Formal verification based methods, used to show a (software) system behaves as its specification says, typically employ a specification language based on the familiar ``assertions''. A specification is typically expressed in some variation of first order logic and the verification system will deductively try to prove the assertions correct or signal that they don't hold. This is a rather elaborate process where assertions (general propositional statements about program fragments that are expected to hold) are used to generate verification conditions (VC), logic formulas, that are then fed into a satisfiability modulo theories (SMT) solver, either behind the scenes in a verification backend or in more visible to the verification expert. VC generation for program verification goes back to at least Hoare's triples, Eiffel style contracts and proof-carrying-code (PCC) of Necula\cite{b7}.
-A common approach to formal verification used to show a (software) system behaves according to its specification is to employ a specification language based on the familiar use of \emph{assertions} \cite{Floyd,Hoare}. A specification (in the form of a statement about program fragments that are expected to hold) is typically expressed in some variation of first-order logic, and the verification system will try to either prove the assertions correct or signal that they don't hold. This can be a rather elaborate process.  For example, assertions can be used to generate logical formulas called \emph{verification conditions} (VCs), which are either fed into a \emph{satisfiability modulo theories} (SMT) solver behind the scenes in a verification backend, or are presented in a more visible manner to a verification expert who will manually discharge them. VC generation for program verification goes back to at least Hoare logic \cite{Hoare}, Eiffel style contracts \cite{Eiffel}, and proof-carrying-code (PCC) \cite{b7}.
+A common approach to formal verification used to show a (software) system behaves according to its specification is to employ a specification language based on the familiar use of \emph{assertions} \cite{Floyd,Hoare}. A specification (in the form of statements about program fragments that are expected to hold) is typically expressed in some variation of first-order logic, and the verification system will try to either prove the assertions correct or signal that they don't hold. This can be a rather elaborate process.  For example, assertions can be used to generate logical formulas called \emph{verification conditions} (VCs), which are either fed into a \emph{satisfiability modulo theories} (SMT) solver behind the scenes in a verification backend, or are presented in a more visible manner to a verification expert who will manually discharge them. VC generation for program verification goes back to at least Hoare logic \cite{Hoare}, Eiffel style contracts \cite{Eiffel}, and proof-carrying-code (PCC) \cite{b7}.
 
 In this paper, we use a formal verification approach to the task of program transformations.
 In particular, the question we address here is:
@@ -114,7 +114,7 @@ To achieve the highest level of assurance that a transformation has maintained c
 Equivalence between two versions of a program certainly implies the correctness of any program properties of interest proved for one version applies to the other.  Alternatively, what if we limit ourselves to only proving properties of interest in the ``before'' version of a program, and show that these properties are maintained in the ``after'' version of the program after a particular transformation is applied? 
 %
 %Certain simple transformations simply don't invalidate expressed properties about the ``before'' version versus the ``after'' version. Below the program snippet in listing [\ref{lst:before}] asserts that $y > 2$ which we can verify visually to be true. In the snippet in listing [\ref{lst:after}] we use a simple obfuscating transformation called variable splitting where we have split the variable $x$ into two other variables $x1$ and $x2$ and we see that (visually) the assertion $y > 2$ still holds.
-Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in listing \ref{lst:before}, which asserts that \texttt{(y > 2)} and is easily verified visually. The snippet in listing \ref{lst:after} illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable \texttt{x} into two  variables \texttt{x1} and \texttt{x2}, and it is clear (visually) that the assertion \texttt{(y > 2)} still holds.
+Here, our focus is on certain simple transformations that don't invalidate properties about the ``before'' version versus the ``after'' version.  For example, consider the program snippet in Listing \ref{lst:before}, which asserts that \texttt{(y > 2)} and is easily verified visually. The snippet in Listing \ref{lst:after} illustrates a simple obfuscating transformation called \emph{variable splitting}, where we have split the variable \texttt{x} into two  variables \texttt{x1} and \texttt{x2}, and it is clear (visually) that the assertion \texttt{(y > 2)} still holds.
 
 
 \begin{listing}
@@ -154,11 +154,11 @@ In general, though, most transformations, whether optimizations or obfuscations,
 invalidate assertions that hold true about the ``before'' version. Obfuscation is particularly troublesome, because its main goal is to hide the functionality of the code from prying eyes while maintaining the functionality of the ``before'' program. More formally, according to Barak et al. as cited in \cite{BanescuCGNP16}, obfuscators are programs that transform an input program (e.g. similar to a compiler) into an output program such that the output program satisfies the following three properties:
 \begin{enumerate}
    \item it is semantically equivalent to the input program (\emph{functionality property}); \label{itm:firstproperty}
-   \item it is at most polynomially bigger or slower than the input program (\emph{slowdown} property) and \label{itm:secondproperty}
+   \item it is at most polynomially bigger or slower than the input program (\emph{slowdown} property); and \label{itm:secondproperty}
    \item it is as ``hard to analyze and de-obfuscate'' as a blackbox version of the program (\emph{virtual black-box property}). \label{itm:thirdproperty}
 \end{enumerate}
 %``Prying eyes'' could as easily be the same as some kind of static analysis tool where an attacker is trying to determine certain facts about the code and obfuscation is trying to make this difficult. The program in listing [\ref{lst:beforeopaque}] is correct with respect to the assertion that is expressed (e.g. $z == 30$) as is evident by simple inspection of the code. The program snippet in listing [\ref{lst:afteropaque}] is the ``after'' program where a non-linear opaque predicate transformation has been applied to hide the fact that at program's end, value of $z$ is in fact 30. We can see that the transformation makes it a bit harder to see that the assertion still holds but knowing the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$ , we can deduce that the assertion does hold and the value of $z$ is in fact still 30. 
-``Prying eyes'' could, for example, be some kind of static analysis tool where an attacker is trying to determine certain facts about the code, and obfuscation is trying to make this difficult. The program in Listing \ref{lst:beforeopaque} is correct with respect to the assertion that is expressed (e.g. \texttt{z == 30}) as is evident by simple inspection of the code. The program snippet in Listing \ref{lst:afteropaque} is the ``after'' program where a non-linear \emph{opaque predicate transformation} (see Section~\ref{sec:opaque}) has been applied to hide the fact that at program's end, the value of \texttt{z} is in fact \texttt{30}. In this case, it follows from the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) == 0$. 
+``Prying eyes'' could, for example, be some kind of static analysis tool where an attacker is trying to determine certain facts about the code, and obfuscation is trying to make this difficult. The program in Listing \ref{lst:beforeopaque} is correct with respect to the assertion that is expressed (e.g. \texttt{z == 30}) as is evident by simple inspection of the code. The program snippet in Listing \ref{lst:afteropaque} is the ``after'' program where a non-linear \emph{opaque predicate transformation} (see Section~\ref{sec:opaque}) has been applied to hide the fact that at program's end, the value of \texttt{z} is in fact \texttt{30}. In this case, it follows from the fact that $\forall x \in \mathbb{Z}, ((x^2 + x)\bmod 2) = 0$. 
 
 %This paper describes steps towards implementing a framework in the Coq Proof Assistant and based on IMP\cite{SFV2}, a simple imperative language to study obfuscating transformations, their impact on programs and how specified behaviour may be preserved beyond the transformations. A number of initial goals and principles drove the direction of this research: 
 This paper describes steps towards implementing a framework in the Coq Proof Assistant \cite{Coq} for a simple imperative language that allows us to study obfuscating transformations, their impact on programs, and how specified behaviour may be preserved beyond the transformations. Our starting point is the IMP language from \cite{SFV2}, which includes an encoding in Coq of a familiar small imperative language along with its formalized semantics.
@@ -252,7 +252,7 @@ Keeping these research goals in mind the contributions of this paper are the fol
    first by augmenting its syntax and semantics with switch statements, and then by defining a lower-level block-structured language that wraps around blocks of code in order to model real-world intermediate languages used in obfuscation tools. This contributes to research goals \ref{goal2} and \ref{goal3}. \label{itm:3}
 \end{itemize}
 
-This project, and in particular, the formalization in Coq, was motivated by the Cloakware obfuscation tool produced at Irdeto, and the interest in showing the correctness of some of its core functionality in safety critical environments.\footnote{Much of it was carried out during the first author's co-op term at Irdeto under the supervision of the second author, who further developed it in his Master's thesis \cite{Weiyun}; all lemmas and theorems referred to in this paper are formally proved in Coq.} For details of the Coq code and fuller explanations of the proofs, the reader is referred to \cite{WeiRepo} and \cite{Weiyun}, respectively.
+This project, and in particular, the formalization in Coq, was motivated by the Cloakware obfuscation tool produced at Irdeto, and the interest in showing the correctness of some of its core functionality in safety critical environments.\footnote{Much of it was carried out during the first author's co-op term at Irdeto under the supervision of the second author. The first author further developed it in his Master's thesis \cite{Weiyun}; all lemmas and theorems referred to in this paper are formally proved in Coq.} For details of the Coq code and fuller explanations of the proofs, the reader is referred to \cite{WeiRepo} and \cite{Weiyun}, respectively.
 %\footnote{Bahman: just marking references to Wei's work. At the end, some may be redundant and/or out of place.}\footnote{AF: I moved this text up from Section 2 to Section 1, and I think we can remove many/most of the other references to the Coq code and the proofs (which I have done). I think this addresses Phil's comments (top of page 1 and the bottom of page 2 on his annotated pdf, and comment 2 in his email).}
 
 
@@ -349,7 +349,7 @@ An \emph{opaque predicate} \cite{CoNa} is a predicate that always evaluates to e
 
 Of course, the most basic opaque predicates are just the boolean constants \emph{true} and \emph{false} themselves, but these are not very useful in practice because it is immediately obvious what is happening in the program, and neither the simplest of humans nor tools will be fooled. For a more advanced treatment of opaque predicates and how they may be broken see \cite{Prada}.
 
-An \emph{opaque predicate transformation} takes as inputs a program to be obfuscated, \texttt{c1}, an opaque predicate \texttt{P}, and a dummy program \texttt{c2}, and returns the program:
+An \emph{opaque predicate transformation} takes as inputs a program to be obfuscated, \texttt{c1}, an opaque predicate \texttt{P} that takes one argument, and a dummy program \texttt{c2}, and returns the program:
 \begin{verbatim}
     IFB (P x) THEN c1 ELSE c2 FI.
 \end{verbatim}
@@ -402,7 +402,7 @@ fact_nonzero / { X --> 3 } \\
 %    
     
 
-For this section, we'll use as a simple opaque predicate namely,
+For this section, we'll use the following fact to define a simple opaque predicate:
     \[
     	\forall x.\ (x * x + x + x + 1) = (x + 1) * (x + 1).
     \]
@@ -452,7 +452,7 @@ Example factorial_3_opaque_trans:
       Z --> 2; Y --> 6; Z --> 1 }.
 \end{verbatim}
 
-The proof of this statement begins by instantiating variables and unfolding definitions; after which the transformed program becomes: 
+The proof of this statement begins by introducing the quantified variables and unfolding definitions; after which the transformed program becomes: 
 \begin{verbatim}
    X' ::= x;;
    Z' ::= X' * X';;
@@ -636,17 +636,17 @@ Definition
 \end{verbatim}
 
 \begin{theorem}\label{generalcequiv}
-If a predicate \texttt{b} is boolean equivalent to $true$, then for any programs \texttt{c1} and \texttt{c2},
+If a boolean \texttt{b} is equivalent to $true$, then for any programs \texttt{c1} and \texttt{c2},
 the program \texttt{c1} is command equivalent to the program resulting from applying \texttt{make\_opaque\_pred}
 to \texttt{b}, \texttt{c1}, and \texttt{c2}. 
 \end{theorem}
 
 The power of the result stated in Theorem \ref{generalcequiv}
 %(see the proof in \cite{Weiyun})
-is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the predicate supplied is indeed an opaque predicate. 
+is that now, the particular programs and predicate used are irrelevant and can be swapped with anything, so long as we can prove the fact that the boolean supplied is indeed an opaque predicate. 
 
 \begin{example}\label{factopaqueex}
-We can now apply this theorem to our same running example of predicate and factorial program as before and show a general result.
+We can now apply this general theorem to our running example of predicate and factorial program.
 %(see \cite{Weiyun} for the proof that verifies it).
 \begin{verbatim}
 Example example_fact_opaque_pred: 
@@ -729,7 +729,7 @@ to the equivalent flattened program illustrated in Figure~\ref{fig:flatIfElse}.
 %
 
 In Section~\ref{4.4}, we briefly discuss other transformations that we have defined and proven correct but do not have space to provide details for.
-For a through treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}. 
+For a thorough treatment of control flow flattening obfuscation and its effects in obstructing static analysis see \cite{Wang}. 
 
 %\subsection{Flattening an If-Then-Else Construct}
 %For the first half of this section, we will focus on a single transformation that turns an If-Then-Else construct into an equivalent flattened program (see listing \ref{lst:beforeflatten} which is adapted from \cite{Blazy2}):
@@ -829,7 +829,7 @@ For a through treatment of control flow flattening obfuscation and its effects i
 %
 %We accordingly redefine the command evaluation semantics to include switch statements.
 %
-Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements. We extend the original IMP language from~\cite{SFV2} and add the clause \texttt{| SWITCH v l} to the BNF grammar presented in Section~\ref{sec:syntaxsemantics}.  Here \texttt{v} is the name of the switch variable (which is $s$ in Figure~\ref{fig:flatIfElse}), represented as a Coq \texttt{string}.  The second argument \texttt{l} is a list of pairs (represented using Coq's built-in types for lists and pairs), where the first element of each pair is a \texttt{nat}, representing the case number in the switch statement, and the second element is a \texttt{com} representing the program associated with that number.
+Before we can formalize control flow flattening of an If-Then-Else construct, we need to enrich IMP with the syntax and semantics of switch statements. We extend the original IMP language from~\cite{SFV2} and add the clause \texttt{| SWITCH v l} to the BNF grammar presented in Section~\ref{sec:syntaxsemantics}.  Here \texttt{v} is the name of the switch variable (which is $s$ in Figure~\ref{fig:flatIfElse}), represented as a Coq \texttt{string}.  The second argument \texttt{l} is a list of pairs (represented using Coq's built-in types for lists and pairs), where the first element of each pair is in $\mathbb{N}$, representing the case number in the switch statement, and the second element is a \texttt{com} representing the program associated with that number.
 We accordingly redefine the command evaluation semantics (the definition of \verb|c / s1 \\ s2|) to include evaluation of switch statements.  In addition, we extend the proof in~\cite{SFV2} to show that evaluation is still deterministic with our new switch statements added to IMP.
 
 %The following theorem and its proof already exist in \cite{SFV2}, but we must update it for our new formulation with switch statements.  The proof also introduces several new tactics and features which are worth explaining (see \cite{Weiyun} for details).\footnote{Phil: Are these ever explained below?  Amy: No, must be modified.}
@@ -1051,7 +1051,7 @@ Proving command equivalence in this case requires proving that for all states \t
   HI2 : eval_invariant c2 swVar
   HIf : eval_invariant footer swVar
   HB : beval_invariant cond swVar
-  H2 : (swVar ::= 0) / st ?\\? s0
+  H2 : (swVar ::= 0) / st \\ s0
   H3 : header / s0 \\ s1
   H4 : 
     (IFB cond THEN c1 ELSE c2 FI) 
@@ -1082,7 +1082,7 @@ The formulas above the double line are the current hypotheses, while the stateme
 
 \subsection{Transforming a While-Do-End Construct}\label{4.4}
 We now switch gears and briefly discuss \emph{dismantling} and then \emph{flattening} a While-Do-End construct, focusing on an example described in \cite{Wang}.
-For this particular transformation, we start with a program with a While-Do-End construct, and dismantle it into a number of basic blocks (where each block is sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  During execution, the targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
+For this particular transformation, we start with a program with a While-Do-End construct, and dismantle it into a number of basic blocks (where each block is a sequence of non-control flow commands ending with a control flow command), essentially replacing the While-Do-End construct with conditional GoTo statements at the end of some blocks.  During execution, the targets of these GoTos are determined dynamically with conditions on some variable in memory, instead of a direct (constant) address as the jump target. Following \cite{Wang} we call this intermediate transformation a dismantling.
 Dismantling is then followed by a flattening operation, reminiscent of the flattening transformation above.
 %In keeping consistent with prior terminology, this transformation will be called flattening.  We'll develop a different language in the next section, however, and model this a bit differently from the switch statements of Sections \ref{4.2} and \ref{4.3}, as we need to consider basic blocks as first class citizens.
 
@@ -1133,7 +1133,9 @@ We have proved that both versions of the program, when starting in a state with 
 There have been three papers by Sandrine Blazy and co-authors that study code obfuscation in Coq, which we discuss here.
 
 %\subsection*{Towards a formally verified obfuscating compiler}
-The first paper, \emph{Towards a formally verified obfuscating compiler} \cite{Blazy1} also uses IMP (their own formulation and not the one from \cite{SFV2}) as the language for obfuscation, but studies data and layout obfuscation techniques, as opposed to the control obfuscation techniques which opaque predicates and control flow flattening fall under \cite{CollbergTax}.
+The first paper
+%, \emph{Towards a formally verified obfuscating compiler} 
+\cite{Blazy1} also uses IMP (their own formulation and not the one from \cite{SFV2}) as the language for obfuscation, but studies data and layout obfuscation techniques, as opposed to the control obfuscation techniques which opaque predicates and control flow flattening fall under \cite{CollbergTax}.
 %
 %The first particular transformation studied herein is obfuscating integer constants, wherein all integer values are substituted by different ones in a distorted semantics using an obfuscating function $O: \mathbb{N} \to \mathbb{N}$.  The other discussed is variable encoding, which changes the names of variables.  A real-life application of this could be, for instance, to change a descriptive variable name like $account\_balance$ to a string of gibberish.
 %
@@ -1142,7 +1144,9 @@ They first consider obfuscating integer constants using a function that maps eac
 Such techniques are inherently different from the ones we have studied. One can make a simple combinatorial argument that putting them together in the same obfuscation transformation would generate a synergistic effect, making a program possibly much more difficult to analyze.
 
 %\subsection*{Formal verification of control-flow graph flattening}
-The second paper, \emph{Formal verification of control-flow graph flattening} \cite{Blazy2} also studies control flow flattening, but the authors use the Clight language of CompCert \cite{CompCert} (the formally verified C compiler in Coq).
+The second paper
+%, \emph{Formal verification of control-flow graph flattening} 
+\cite{Blazy2} also studies control flow flattening, but the authors use the Clight language of CompCert \cite{CompCert} (the formally verified C compiler in Coq).
 Clight is the first intermediate language in the CompCert compiler workflow, and the strategy used was to prove the correctness of the obfuscation in that setting, from which the correctness of the compilation process follows ``for free'' from CompCert's own proofs of semantic preservation.
 
 On the one hand, the approach in \cite{Blazy2} is less elementary and less accessible, as it works with a nontrivial subset of the real C language, but on the other it is clear evidence that formal verification of obfuscation techniques need not be restricted to a small language like IMP (which would never be used in real software development). Other real-world practicalities considered in \cite{Blazy2} include simulation techniques and analysis of running time.
@@ -1154,14 +1158,17 @@ In comparing the work in \cite{Blazy2} to ours, we believe there is merit both i
 The authors of \cite{Blazy2} also ran into a similar issue as we did; they needed to separate switching variables from those in the program to be transformed, but their solution was different. They instead use a function to parse the program to be transformed and generate a fresh variable which doesn't appear there to be used for the transformation.  From a practical point of view, this approach is perhaps more natural, and in line with how a real obfuscating tool would function---generating new variables rather than demand that a certain specifically named variable doesn't exist in the source program.  Theoretically, though, these are equivalent, since any program can contain only finitely many variable names, and there are an infinite number to choose from.
 
 %\subsection*{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions}
-The third paper, \emph{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions} \cite{Blazy3} continues to work in Clight, and studies obfuscations that involve mixing arithmetic operators and bitwise boolean operators.  This is another data obfuscation that appears frequently in real-world binary code, but as it is based on features wildly beyond the capabilities of IMP, a detailed discussion is beyond the scope of the present work.
+The third paper
+%, \emph{Formal verification of a program obfuscation based on mixed boolean-arithmetic expressions}
+\cite{Blazy3} continues to work in Clight, and studies obfuscations that involve mixing arithmetic operators and bitwise boolean operators.  This is another data obfuscation that appears frequently in real-world binary code, but as it is based on features wildly beyond the capabilities of IMP, a detailed discussion is beyond the scope of the present work.
 
 \section{Future Work}
 The work done to date on formal verification of obfuscation, both in the present work and in the papers of Blazy et al., while providing a solid proof-of-concept that obfuscation tools of the future could support formal verification, are still limited in scope in the sense that they treat individual transformations.
 
 A real world obfuscator mixes many different transformations together at once, often in non-deterministic ways for \emph{diversification} of obfuscations, and so some form of compositionality would need to be implemented on these formal proofs to be able to use them together and preserve the desired formulation of correctness. 
 
-Earlier (contribution item \ref{itm:1}) we mentioned how our obfuscators would generate additional assertions to show the obfuscated program preserves a desired behaviour of the original program. While we have worked out offline proofs for certain obfuscations, such as certain opaque predicates, we still need a way to integrate these proofs in the machinery of ``decorated programs'' that \emph{IMP} already provides. 
+%Earlier (contribution item \ref{itm:1}) we mentioned how our obfuscators would generate additional assertions to show the obfuscated program preserves a desired behaviour of the original program. While we have worked out offline proofs for certain obfuscations, such as certain opaque predicates, we still need a way to integrate these proofs in the machinery of ``decorated programs'' that \emph{IMP} already provides. 
+Earlier (first contribution item) we mentioned how our obfuscators would generate additional assertions to show the obfuscated program preserves a desired behaviour of the original program. While we have worked out offline proofs for certain obfuscations, such as some new opaque predicates, we still need a way to integrate these proofs into the machinery of ``decorated programs'' that \emph{IMP} already provides. 
 
 %(along with the three aforementioned pieces of related work)
 (along with the work of Blazy et al.)
