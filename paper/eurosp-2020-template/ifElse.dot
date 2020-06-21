@@ -1,0 +1,10 @@
+digraph ifgraph {
+splines=false;
+     Header -> "If(b)";
+     "If(b)" -> c1 [label="true"];
+     "If(b)" -> c1 [label=""];
+     "If(b)" -> c2 [label=""];
+     "If(b)" -> c2 [label="false"];
+     c1 -> Footer;
+     c2 -> Footer;
+ }

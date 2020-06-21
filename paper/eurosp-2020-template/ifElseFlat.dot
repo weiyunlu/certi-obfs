@@ -1,0 +1,13 @@
+digraph ifFlatGraph {
+     "s = 0" -> "While (s <= 4) do (Switch s) End";
+     "While (s <= 4) do (Switch s) End" -> "Header; s = 1" [minlen=1, label="0"];
+                                           "Header; s = 1" -> "While (s <= 4) do (Switch s) End" [minlen=1];  
+     "While (s <= 4) do (Switch s) End" -> "If (b) then (s = 2) else (s = 3)" [minlen=2, label="1"];
+                                           "If (b) then (s = 2) else (s = 3)" -> "While (s <= 4) do (Switch s) End" [minlen=2];
+     "While (s <= 4) do (Switch s) End" -> "c1; s = 4" [minlen=3, label="2"];
+                                           "c1; s = 4" -> "While (s <= 4) do (Switch s) End" [minlen=3];
+     "While (s <= 4) do (Switch s) End" -> "c2; s = 4" [minlen=4, label="3"];
+                                           "c2; s = 4" -> "While (s <= 4) do (Switch s) End" [minlen=4];
+     "While (s <= 4) do (Switch s) End" -> "Footer; s = 5" [minlen=5, label="4"];
+                                           "Footer; s = 5" -> "While (s <= 4) do (Switch s) End" [minlen=5];
+ }
